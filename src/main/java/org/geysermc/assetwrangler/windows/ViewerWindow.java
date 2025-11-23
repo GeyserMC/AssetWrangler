@@ -98,7 +98,7 @@ public class ViewerWindow extends JFrame implements AssetViewerWindow {
         return new JsonMappingsMeta.Section();
     }
 
-    private class Layout implements LayoutManager {
+    private static class Layout implements LayoutManager {
         private static final int MINIMUM_PREVIEW_PANEL_HEIGHT = 256;
 
         public void addLayoutComponent(String name, Component comp) {}
