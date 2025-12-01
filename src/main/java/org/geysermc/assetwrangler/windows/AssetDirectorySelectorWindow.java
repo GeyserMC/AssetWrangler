@@ -8,11 +8,12 @@ import javax.swing.*;
 import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
+import java.util.function.Consumer;
 
 public class AssetDirectorySelectorWindow extends JFrame {
     private String selectedPath = "";
 
-    public AssetDirectorySelectorWindow(AssetPanel panel, Runnable onComplete) {
+    public AssetDirectorySelectorWindow(AssetPanel panel) {
         this.setSize(500, 500);
         this.setLayout(new LayoutManager() {
             public void addLayoutComponent(String name, Component comp) {}
@@ -55,9 +56,17 @@ public class AssetDirectorySelectorWindow extends JFrame {
 
         JButton done = new JButton("Done");
         done.addActionListener(e -> {
-            panel.getMetaSection().setRelativePath(selectedPath);
             this.dispose();
-            onComplete.run();
+            String oldPath = panel.getMetaSection().getRelativePath();
+            String newPath = selectedPath;
+
+            panel.getMain().getActionManager().doAction(() -> {
+                panel.getMetaSection().setRelativePath(newPath);
+                panel.redraw();
+            }, () -> {
+                panel.getMetaSection().setRelativePath(oldPath);
+                panel.redraw();
+            }, true);
         });
         this.add(done);
 

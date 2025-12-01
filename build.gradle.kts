@@ -16,6 +16,7 @@ dependencies {
     implementation("com.formdev:flatlaf:3.6")
     implementation("com.formdev:flatlaf-intellij-themes:3.6")
     implementation("com.twelvemonkeys.imageio:imageio-tga:3.9.4")
+    implementation("com.googlecode.soundlibs:vorbisspi:1.0.3.3")
     implementation("com.google.code.gson:gson:2.13.2")
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-GeyserMC-20251111.004649-11")
@@ -45,7 +46,6 @@ tasks.processResources {
         val propProps = props.entries.joinToString(separator = "\n") {
             "project.${it.key}=${it.value}"
         }
-        // This comment is important, without it, the build breaks
         File(resourcesDir, "build.properties").writeText(propProps)
     }
 }

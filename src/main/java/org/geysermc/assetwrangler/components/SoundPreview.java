@@ -26,8 +26,11 @@ public class SoundPreview extends JPanel {
         label.append(relativePath);
 
         try {
+            Clip clip = AudioSystem.getClip();
             AudioInputStream inputStream = AudioSystem.getAudioInputStream(file);
             AudioFormat format = inputStream.getFormat();
+            clip.open(inputStream);
+            clip.start();
 
             label.append("<br/>Format: ");
             label.append(format.toString());
@@ -40,7 +43,9 @@ public class SoundPreview extends JPanel {
                                     TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationInMillis))
                     )
             );
-        } catch (UnsupportedAudioFileException | IOException ignored) {}
+        } catch (UnsupportedAudioFileException | IOException ignored) {} catch (LineUnavailableException e) {
+            throw new RuntimeException(e);
+        }
 
         label.append("</html>");
 

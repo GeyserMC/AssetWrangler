@@ -8,6 +8,7 @@ import org.geysermc.assetwrangler.windows.InfoWindow;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,7 @@ public class AssetMapperToolBar extends JMenuBar {
 
         createPopupMenu(
                 "File",
-                TooltipItem.of("Create", (item) -> {
+                TooltipItem.of("Create", () -> {
                     main.offerSaveIfRequired(b -> {
                         if (b != null) {
                             FileDialog chooser = new FileDialog(main);
@@ -45,7 +46,7 @@ public class AssetMapperToolBar extends JMenuBar {
                         }
                     });
                 }),
-                TooltipItem.of("Open", (item) -> {
+                TooltipItem.of("Open", () -> {
                     main.offerSaveIfRequired(b -> {
                         if (b != null) {
                             FileDialog chooser = new FileDialog(main);
@@ -65,8 +66,25 @@ public class AssetMapperToolBar extends JMenuBar {
                         }
                     });
                 }),
-                TooltipItem.of("Save", (item) -> main.save()),
-                TooltipItem.of("Save As", (item) -> main.saveAs())
+                TooltipItem.of("Save", main::save),
+                TooltipItem.of("Save As", main::saveAs)
+        );
+        createPopupMenu(
+                "Edit",
+                TooltipItem.of("Undo", () -> {
+                    if (main.getActionManager().canUndo()) {
+                        main.getActionManager().undo();
+                    } else {
+                        JOptionPane.showMessageDialog(main, "Nothing to undo!", "Uh oh", JOptionPane.WARNING_MESSAGE);
+                    }
+                }, main, KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx())),
+                TooltipItem.of("Redo", () -> {
+                    if (main.getActionManager().canRedo()) {
+                        main.getActionManager().redo();
+                    } else {
+                        JOptionPane.showMessageDialog(main, "Nothing to redo!", "Uh oh", JOptionPane.WARNING_MESSAGE);
+                    }
+                }, main, KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()))
         );
         createPopupMenu(
                 "View",
@@ -95,22 +113,16 @@ public class AssetMapperToolBar extends JMenuBar {
         );
         createPopupMenu(
                 "Tools",
-                TooltipItem.of("Set Java Relative Path", (item) -> {
-                    new AssetDirectorySelectorWindow(main.getJavaAssetPanel(), () -> {
-                        main.getJavaAssetPanel().redraw();
-                        main.markSave();
-                    });
+                TooltipItem.of("Set Java Relative Path", () -> {
+                    new AssetDirectorySelectorWindow(main.getJavaAssetPanel());
                 }),
-                TooltipItem.of("Set Bedrock Relative Path", (item) -> {
-                    new AssetDirectorySelectorWindow(main.getBedrockAssetPanel(), () -> {
-                        main.getBedrockAssetPanel().redraw();
-                        main.markSave();
-                    });
+                TooltipItem.of("Set Bedrock Relative Path", () -> {
+                    new AssetDirectorySelectorWindow(main.getBedrockAssetPanel());
                 })
         );
         createPopupMenu(
                 "Info",
-                TooltipItem.of("Version", (item) -> {
+                TooltipItem.of("Version", () -> {
                     new InfoWindow(main);
                 })
         );

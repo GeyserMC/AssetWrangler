@@ -3,6 +3,7 @@ package org.geysermc.assetwrangler.windows;
 import lombok.Getter;
 import org.geysermc.assetwrangler.BuildConstants;
 import org.geysermc.assetwrangler.Main;
+import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.config.Config;
 import org.geysermc.assetwrangler.panels.*;
 import org.geysermc.assetwrangler.panels.BedrockAssetPanel;
@@ -27,22 +28,22 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Getter
 public class MappingsWindow extends JFrame implements AssetViewerWindow {
+    private final ActionManager actionManager;
+
     private final PreviewPanel previewPanel;
-    @Getter
     private final JavaAssetPanel javaAssetPanel;
-    @Getter
     private final BedrockAssetPanel bedrockAssetPanel;
 
     private YamlConfigurationLoader metaLoader;
-
-    @Getter
     private JsonMappingsMeta mappingsMeta;
     private JsonMappings mappings;
-    @Getter
     private boolean savesRequired = false;
 
     public MappingsWindow() {
+        actionManager = new ActionManager(this);
+
         metaLoader = YamlConfigurationLoader.builder()
                 .path(Path.of(Main.mappingFile.toString() + ".asset_mapper_meta.yml"))
                 .indent(4)
@@ -226,45 +227,67 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
             return;
         }
 
-        mappings.map(
-                javaAssets.getFirst(),
-                bedrockAssets
-        );
-        markSave();
-        refreshView();
+        actionManager.doAction(() -> {
+            mappings.map(
+                    javaAssets.getFirst(),
+                    bedrockAssets
+            );
+            refreshView();
+        }, () -> {
+            mappings.remove(javaAssets.getFirst());
+            refreshView();
+        }, true);
+
     }
 
     public void match() {
         List<String> javaAssets = javaAssetPanel.getUnmappedSelectedPaths();
         List<String> bedrockAssets = bedrockAssetPanel.getUnmappedSelectedPaths();
 
-        javaAssets.forEach(mappingsMeta.getJava()::matchPath);
-        bedrockAssets.forEach(mappingsMeta.getBedrock()::matchPath);
-
-        markSave();
-        refreshView();
+        actionManager.doAction(() -> {
+            javaAssets.forEach(mappingsMeta.getJava()::matchPath);
+            bedrockAssets.forEach(mappingsMeta.getBedrock()::matchPath);
+            refreshView();
+        }, () -> {
+            javaAssets.forEach(mappingsMeta.getJava()::unmatchPath);
+            bedrockAssets.forEach(mappingsMeta.getBedrock()::unmatchPath);
+            refreshView();
+        }, true);
     }
 
     public void ignore() {
         List<String> javaAssets = javaAssetPanel.getUnmappedSelectedPaths();
         List<String> bedrockAssets = bedrockAssetPanel.getUnmappedSelectedPaths();
 
-        javaAssets.forEach(mappingsMeta.getJava()::ignorePath);
-        bedrockAssets.forEach(mappingsMeta.getBedrock()::ignorePath);
-
-        markSave();
-        refreshView();
+        actionManager.doAction(() -> {
+            javaAssets.forEach(mappingsMeta.getJava()::ignorePath);
+            bedrockAssets.forEach(mappingsMeta.getBedrock()::ignorePath);
+            refreshView();
+        }, () -> {
+            javaAssets.forEach(mappingsMeta.getJava()::unignorePath);
+            bedrockAssets.forEach(mappingsMeta.getBedrock()::unignorePath);
+            refreshView();
+        }, true);
     }
 
     public void transformed() {
         List<String> javaAssets = javaAssetPanel.getUnmappedSelectedPaths();
         List<String> bedrockAssets = bedrockAssetPanel.getUnmappedSelectedPaths();
 
-        javaAssets.forEach(mappingsMeta.getJava()::transformPath);
-        bedrockAssets.forEach(mappingsMeta.getBedrock()::transformPath);
+        actionManager.doAction(() -> {
+            javaAssets.forEach(mappingsMeta.getJava()::transformPath);
+            bedrockAssets.forEach(mappingsMeta.getBedrock()::transformPath);
+            refreshView();
+        }, () -> {
+            javaAssets.forEach(mappingsMeta.getJava()::untransformPath);
+            bedrockAssets.forEach(mappingsMeta.getBedrock()::untransformPath);
+            refreshView();
+        }, true);
+    }
 
-        markSave();
-        refreshView();
+    public void unmarkSave() {
+        this.savesRequired = false;
+        this.setTitle(BuildConstants.getInstance().getName());
     }
 
     public void markSave() {
@@ -281,6 +304,14 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
         this.repaint();
         this.javaAssetPanel.redraw();
         this.bedrockAssetPanel.redraw();
+
+        if (this.javaAssetPanel.getUnmappedSelectedPaths().isEmpty()) {
+            this.previewPanel.setJavaPreviewComponent(null);
+        }
+
+        if (this.bedrockAssetPanel.getUnmappedSelectedPaths().isEmpty()) {
+            this.previewPanel.setBedrockPreviewComponent(null);
+        }
     }
 
     private void save(Path path) {

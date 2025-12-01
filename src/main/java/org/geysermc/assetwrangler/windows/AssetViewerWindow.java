@@ -1,5 +1,6 @@
 package org.geysermc.assetwrangler.windows;
 
+import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 
 import javax.swing.*;
@@ -13,4 +14,10 @@ public interface AssetViewerWindow {
 
     JsonMappingsMeta.Section getJavaMeta();
     JsonMappingsMeta.Section getBedrockMeta();
+
+    ActionManager getActionManager();
+
+    boolean isSavesRequired();
+    void markSave();
+    void unmarkSave();
 }

@@ -1,7 +1,9 @@
 package org.geysermc.assetwrangler.windows;
 
+import lombok.Getter;
 import org.geysermc.assetwrangler.BuildConstants;
 import org.geysermc.assetwrangler.Main;
+import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.panels.*;
 import org.geysermc.assetwrangler.sources.AssetSource;
 import org.geysermc.assetwrangler.sources.AssetSources;
@@ -12,10 +14,15 @@ import java.awt.*;
 import java.io.IOException;
 
 public class ViewerWindow extends JFrame implements AssetViewerWindow {
+    @Getter
+    private final ActionManager actionManager;
+
     private final AssetPanel assetPanel;
     private final PreviewPanel previewPanel;
 
     public ViewerWindow(boolean isJava) {
+        actionManager = new ActionManager(this);
+
         this.setLayout(new Layout());
 
         if (isJava) {
@@ -96,6 +103,21 @@ public class ViewerWindow extends JFrame implements AssetViewerWindow {
     @Override
     public JsonMappingsMeta.Section getBedrockMeta() {
         return new JsonMappingsMeta.Section();
+    }
+
+    @Override
+    public boolean isSavesRequired() {
+        return false;
+    }
+
+    @Override
+    public void markSave() {
+        // No-op, saves shouldn't happen on a viewer window
+    }
+
+    @Override
+    public void unmarkSave() {
+        // No-op, saves shouldn't happen on a viewer window
     }
 
     private static class Layout implements LayoutManager {

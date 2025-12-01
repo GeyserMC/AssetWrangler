@@ -127,7 +127,7 @@ public class Asset {
             String key = entry.getKey();
             String value = entry.getValue();
 
-            if (!panel.getMetaSection().getRelativePath().isBlank()) {
+            if (panel != null && !panel.getMetaSection().getRelativePath().isBlank()) {
                 if (!panel.getMetaSection().getRelativePath().equals(key)) {
                     key = key.substring(
                             panel.getMetaSection().getRelativePath().length() + 1
