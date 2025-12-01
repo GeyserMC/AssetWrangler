@@ -29,7 +29,13 @@ public class SoundPreview extends JPanel {
             Clip clip = AudioSystem.getClip();
             AudioInputStream inputStream = AudioSystem.getAudioInputStream(file);
             AudioFormat format = inputStream.getFormat();
-            clip.open(inputStream);
+
+            // convert stream for playback (https://web.archive.org/web/20200220131053/http://www.javazoom.net/vorbisspi/documents.html)
+            AudioFormat targetFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, format.getSampleRate(),
+                    16, format.getChannels(), format.getChannels() * 2, format.getSampleRate(), false);
+            AudioInputStream convertedStream = AudioSystem.getAudioInputStream(targetFormat, inputStream);
+
+            clip.open(convertedStream);
             clip.start();
 
             label.append("<br/>Format: ");
