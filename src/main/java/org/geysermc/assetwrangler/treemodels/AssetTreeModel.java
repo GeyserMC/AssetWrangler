@@ -238,7 +238,6 @@ public class AssetTreeModel implements TreeModel {
                 gbc.gridwidth = GridBagConstraints.REMAINDER;
                 JTextArea textArea = new JTextArea();
                 textArea.setEditable(false);
-                textArea.setBackground(new Color(28, 30, 37));
                 try {
                     textArea.setText(Files.readString(file.toPath()));
                 } catch (IOException e) {

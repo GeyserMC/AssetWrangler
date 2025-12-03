@@ -65,7 +65,6 @@ public abstract class AssetPanel extends BasePanel {
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(20);
         tree = new JTree(new AssetTreeModel(this, rootAsset.resolve(getMetaSection().getRelativePath()), rootName));
-        tree.setBackground(new Color(56, 60, 74));
         tree.setBorder(new EmptyBorder(0, 0, 0, 0));
         TreeSelectionModel selectionModel = new DefaultTreeSelectionModel();
         selectionModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);

@@ -42,7 +42,7 @@ public abstract class GitHubAssetSource implements AssetSource {
     }
 
     @Override
-    public boolean download(Path dataDirectory, JFrame parentFrame, boolean update) throws IOException {
+    public boolean download(Path dataDirectory, JFrame parentFrame, Runnable callback, boolean update) throws IOException {
         if (update) {
             int choice = JOptionPane.showOptionDialog(
                     parentFrame,
@@ -112,6 +112,8 @@ public abstract class GitHubAssetSource implements AssetSource {
 
         zis.closeEntry();
         zis.close();
+
+        callback.run();
 
         return true;
     }

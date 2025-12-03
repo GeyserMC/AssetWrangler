@@ -1,28 +1,34 @@
 package org.geysermc.assetwrangler;
 
 import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatArcIJTheme;
+import com.jthemedetecor.OsThemeDetector;
 import org.geysermc.assetwrangler.config.Config;
 import org.geysermc.assetwrangler.sources.AssetSources;
-import org.geysermc.assetwrangler.sources.bedrock.BedrockInstalledAssetSource;
-import org.geysermc.assetwrangler.sources.bedrock.BedrockLocalAssetSource;
-import org.geysermc.assetwrangler.sources.bedrock.BedrockSampleAssetSource;
+import org.geysermc.assetwrangler.sources.bedrock.*;
 import org.geysermc.assetwrangler.sources.java.JavaLocalAssetSource;
-import org.geysermc.assetwrangler.sources.java.JavaVanillaAssetSource;
+import org.geysermc.assetwrangler.sources.java.JavaReleaseAssetSource;
+import org.geysermc.assetwrangler.sources.java.JavaSnapshotAssetSource;
 import org.geysermc.assetwrangler.windows.InfoWindow;
 import org.geysermc.assetwrangler.windows.SourceSelectWindow;
 import org.geysermc.assetwrangler.windows.StartUpWindow;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Main {
     private static final YamlConfigurationLoader CONFIG_LOADER;
@@ -32,6 +38,21 @@ public class Main {
     public static final Icon ICON;
     public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
     public static Path mappingFile;
+
+    private static final List<Runnable> DARK_MODE_HOOKS = new CopyOnWriteArrayList<>();
+
+    public static void registerForFrame(Window frame) {
+        Runnable runnable = () -> {
+            SwingUtilities.updateComponentTreeUI(frame);
+        };
+        DARK_MODE_HOOKS.add(runnable);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                DARK_MODE_HOOKS.remove(runnable);
+            }
+        });
+    }
 
     static {
         if (Main.IS_WINDOWS) {
@@ -90,13 +111,22 @@ public class Main {
 
     public static void main(String[] args) {
         AssetSources.registerSource(new JavaLocalAssetSource());
-        AssetSources.registerSource(new JavaVanillaAssetSource());
+        AssetSources.registerSource(new JavaReleaseAssetSource());
+        AssetSources.registerSource(new JavaSnapshotAssetSource());
 
-        AssetSources.registerSource(new BedrockInstalledAssetSource());
+        AssetSources.registerSource(new BedrockReleaseAssetSource());
+        AssetSources.registerSource(new BedrockPreviewAssetSource());
         AssetSources.registerSource(new BedrockLocalAssetSource());
         AssetSources.registerSource(new BedrockSampleAssetSource());
 
-        FlatArcDarkIJTheme.setup();
+        final OsThemeDetector detector = OsThemeDetector.getDetector();
+        detector.registerListener(isDark -> {
+            SwingUtilities.invokeLater(() -> {
+                setDarkMode(isDark);
+            });
+        });
+        setDarkMode(detector.isDark());
+
         if (
                 CONFIG.bedrockAssetSourceKey().isBlank() ||
                         CONFIG.javaAssetSourceKey().isBlank()
@@ -105,6 +135,16 @@ public class Main {
         } else {
             new StartUpWindow();
         }
+    }
+
+    private static void setDarkMode(boolean isDark) {
+        if (isDark) {
+            FlatArcDarkIJTheme.setup();
+        } else {
+            FlatArcIJTheme.setup();
+        }
+
+        DARK_MODE_HOOKS.forEach(Runnable::run);
     }
 
     static {

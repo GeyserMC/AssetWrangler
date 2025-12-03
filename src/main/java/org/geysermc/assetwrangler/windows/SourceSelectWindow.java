@@ -3,6 +3,7 @@ package org.geysermc.assetwrangler.windows;
 import org.geysermc.assetwrangler.BuildConstants;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.components.DelegateStorageButtonModel;
+import org.geysermc.assetwrangler.components.SourceLabel;
 import org.geysermc.assetwrangler.sources.AssetSource;
 import org.geysermc.assetwrangler.sources.AssetSources;
 
@@ -14,54 +15,38 @@ import java.io.IOException;
 
 public class SourceSelectWindow extends JFrame {
     public SourceSelectWindow(Runnable onComplete) {
+        Main.registerForFrame(this);
+
         this.setLayout(new FlowLayout());
 
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(1, 2, 10, 0));
 
-        ButtonGroup javaGroup = new ButtonGroup();
-        ButtonModel selectedJavaModel = null;
         JPanel javaPanel = new JPanel();
-        javaPanel.setLayout(new GridLayout(0, 1, 0, 10));
+        javaPanel.setLayout(new FlowLayout());
+        JComboBox<SourceLabel> javaComboBox = new JComboBox<>();
         for (AssetSource assetSource : AssetSources.javaSources()) {
-            JRadioButton button = new JRadioButton(assetSource.getName());
-            button.setModel(new DelegateStorageButtonModel(button.getModel(), assetSource.getKey()));
+            SourceLabel label = new SourceLabel(assetSource.getKey(), assetSource.getName());
+            javaComboBox.addItem(label);
 
-            if (Main.CONFIG.javaAssetSourceKey().equals(assetSource.getKey())) selectedJavaModel = button.getModel();
-
-            if (assetSource.getDisabledMessage() != null) {
-                button.setEnabled(false);
-                button.setToolTipText(assetSource.getDisabledMessage());
-            }
-            button.addActionListener(e -> {
-                Main.CONFIG.javaAssetSourceKey(assetSource.getKey());
-                javaGroup.setSelected(button.getModel(), true);
-            });
-            javaPanel.add(button);
+            if (Main.CONFIG.javaAssetSourceKey().equals(assetSource.getKey()))
+                javaComboBox.setSelectedItem(label);
         }
-        javaGroup.setSelected(selectedJavaModel, true);
+        javaPanel.add(new JLabel("Java Sources"));
+        javaPanel.add(javaComboBox);
 
-        ButtonGroup bedrockGroup = new ButtonGroup();
-        ButtonModel selectedBedrockModel = null;
         JPanel bedrockPanel = new JPanel();
-        bedrockPanel.setLayout(new GridLayout(0, 1, 0, 10));
+        bedrockPanel.setLayout(new FlowLayout());
+        JComboBox<SourceLabel> bedrockComboBox = new JComboBox<>();
         for (AssetSource assetSource : AssetSources.bedrockSources()) {
-            JRadioButton button = new JRadioButton(assetSource.getName());
-            button.setModel(new DelegateStorageButtonModel(button.getModel(), assetSource.getKey()));
+            SourceLabel label = new SourceLabel(assetSource.getKey(), assetSource.getName());
+            bedrockComboBox.addItem(label);
 
-            if (Main.CONFIG.bedrockAssetSourceKey().equals(assetSource.getKey())) selectedBedrockModel = button.getModel();
-
-            if (assetSource.getDisabledMessage() != null) {
-                button.setEnabled(false);
-                button.setToolTipText(assetSource.getDisabledMessage());
-            }
-            button.addActionListener(e -> {
-                Main.CONFIG.bedrockAssetSourceKey(assetSource.getKey());
-                bedrockGroup.setSelected(button.getModel(), true);
-            });
-            bedrockPanel.add(button);
+            if (Main.CONFIG.bedrockAssetSourceKey().equals(assetSource.getKey()))
+                bedrockComboBox.setSelectedItem(label);
         }
-        bedrockGroup.setSelected(selectedBedrockModel, true);
+        bedrockPanel.add(new JLabel("Bedrock Sources"));
+        bedrockPanel.add(bedrockComboBox);
 
         panel.add(javaPanel);
         panel.add(bedrockPanel);
@@ -70,58 +55,78 @@ public class SourceSelectWindow extends JFrame {
 
         JButton done = new JButton("Done");
         done.addActionListener(e -> {
-            if (javaGroup.getSelection() == null) {
+            if (javaComboBox.getSelectedItem() == null) {
                 JOptionPane.showMessageDialog(
                         SourceSelectWindow.this,
                         "Select a java source.",
                         "Uh oh", JOptionPane.WARNING_MESSAGE
                 );
-            } else if (bedrockGroup.getSelection() == null) {
+            } else if (bedrockComboBox.getSelectedItem() == null) {
                 JOptionPane.showMessageDialog(
                         SourceSelectWindow.this,
                         "Select a bedrock source.",
                         "Uh oh", JOptionPane.WARNING_MESSAGE
                 );
             } else {
-                Main.CONFIG.javaAssetSourceKey(((DelegateStorageButtonModel) javaGroup.getSelection()).getStoredId());
-                Main.CONFIG.bedrockAssetSourceKey(((DelegateStorageButtonModel) bedrockGroup.getSelection()).getStoredId());
+                String javaId = ((SourceLabel) javaComboBox.getSelectedItem()).getId();
+                String bedrockId = ((SourceLabel) bedrockComboBox.getSelectedItem()).getId();
 
-                AssetSource javaSource = AssetSources.getAssetSource(Main.CONFIG.javaAssetSourceKey());
-                try {
-                    javaSource.setup(Main.DATA_FOLDER, SourceSelectWindow.this);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+                AssetSource javaSource = AssetSources.getAssetSource(javaId);
+                AssetSource bedrockSource = AssetSources.getAssetSource(bedrockId);
+
+                if (javaSource.getDisabledMessage() != null) {
                     JOptionPane.showMessageDialog(
-                            this,
-                            "Something went wrong while fetching java assets",
-                            "Error! Error!",
-                            JOptionPane.ERROR_MESSAGE
+                            SourceSelectWindow.this,
+                            javaSource.getDisabledMessage(),
+                            "Uh oh", JOptionPane.WARNING_MESSAGE
                     );
-                }
-
-                AssetSource bedrockSource = AssetSources.getAssetSource(Main.CONFIG.bedrockAssetSourceKey());
-                try {
-                    bedrockSource.setup(Main.DATA_FOLDER, SourceSelectWindow.this);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+                } else if (bedrockSource.getDisabledMessage() != null) {
                     JOptionPane.showMessageDialog(
-                            this,
-                            "Something went wrong while fetching bedrock assets",
-                            "Error! Error!",
-                            JOptionPane.ERROR_MESSAGE
+                            SourceSelectWindow.this,
+                            bedrockSource.getDisabledMessage(),
+                            "Uh oh", JOptionPane.WARNING_MESSAGE
                     );
-                }
+                } else {
+                    Main.CONFIG.javaAssetSourceKey(javaId);
+                    Main.CONFIG.bedrockAssetSourceKey(bedrockId);
 
-                onComplete.run();
-                this.dispose();
+                    try {
+                        javaSource.setup(Main.DATA_FOLDER, SourceSelectWindow.this, () -> {
+                            try {
+                                bedrockSource.setup(Main.DATA_FOLDER, SourceSelectWindow.this, () -> {
+                                    onComplete.run();
+                                    this.dispose();
+                                });
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                                JOptionPane.showMessageDialog(
+                                        this,
+                                        "Something went wrong while fetching bedrock assets",
+                                        "Error! Error!",
+                                        JOptionPane.ERROR_MESSAGE
+                                );
+                            }
+                        });
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "Something went wrong while fetching java assets",
+                                "Error! Error!",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
             }
         });
         this.add(done);
 
-        this.setSize(400, 170);
+        this.setSize(600, 125);
+        this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.setTitle(BuildConstants.getInstance().getName());
         this.setIconImage(Main.ICON_IMAGE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setVisible(true);
     }
 }

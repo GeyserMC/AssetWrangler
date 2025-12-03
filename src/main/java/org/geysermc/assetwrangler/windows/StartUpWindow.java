@@ -11,6 +11,8 @@ import java.nio.file.Path;
 
 public class StartUpWindow extends JFrame {
     public StartUpWindow() {
+        Main.registerForFrame(this);
+
         this.setLayout(new FlowLayout());
         this.add(new JLabel("Welcome to %s! Select an option to begin.".formatted(BuildConstants.getInstance().getName())));
 

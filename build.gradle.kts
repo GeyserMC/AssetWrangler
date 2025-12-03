@@ -10,11 +10,14 @@ version = "0.1.0"
 repositories {
     mavenCentral()
     maven("https://repo.opencollab.dev/main")
+    maven("https://jitpack.io")
 }
 
 dependencies {
     implementation("com.formdev:flatlaf:3.6")
     implementation("com.formdev:flatlaf-intellij-themes:3.6")
+    implementation("com.github.Dansoftowner:jSystemThemeDetector:3.6")
+
     implementation("com.twelvemonkeys.imageio:imageio-tga:3.9.4")
     implementation("com.googlecode.soundlibs:vorbisspi:1.0.3.3")
     implementation("com.google.code.gson:gson:2.13.2")
@@ -45,8 +48,7 @@ tasks.processResources {
         )
         val propProps = props.entries.joinToString(separator = "\n") {
             "project.${it.key}=${it.value}"
-        }
-        File(resourcesDir, "build.properties").writeText(propProps)
+        }; File(resourcesDir, "build.properties").writeText(propProps)
     }
 }
 

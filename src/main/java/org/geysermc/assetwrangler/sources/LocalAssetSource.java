@@ -16,7 +16,19 @@ import java.util.stream.Collectors;
 
 public abstract class LocalAssetSource implements AssetSource {
     @Override
-    public boolean setup(Path dataDirectory, JFrame parent) throws IOException {
+    public boolean downloadRequired(Path dataDirectory) {
+        Path storagePath = dataDirectory.resolve("data/%s.path".formatted(getKey()));
+        try {
+            Files.createDirectories(storagePath.getParent());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return Files.notExists(storagePath);
+    }
+
+    @Override
+    public boolean download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) throws IOException {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         chooser.setDialogTitle("Select %s Asset Directory".formatted(getType().getName()));
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -35,27 +47,14 @@ public abstract class LocalAssetSource implements AssetSource {
                             .collect(Collectors.joining(File.pathSeparator))
             );
 
+            callback.run();
+
             return true;
         }
 
+        callback.run();
+
         return false;
-    }
-
-    @Override
-    public boolean downloadRequired(Path dataDirectory) {
-        Path storagePath = dataDirectory.resolve("data/%s.path".formatted(getKey()));
-        try {
-            Files.createDirectories(storagePath.getParent());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return Files.notExists(storagePath);
-    }
-
-    @Override
-    public boolean download(Path dataDirectory, JFrame parent, boolean update) throws IOException {
-        return setup(dataDirectory, parent);
     }
 
     @SneakyThrows

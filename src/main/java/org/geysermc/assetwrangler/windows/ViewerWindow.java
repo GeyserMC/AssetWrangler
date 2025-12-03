@@ -12,6 +12,7 @@ import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ViewerWindow extends JFrame implements AssetViewerWindow {
     @Getter
@@ -21,42 +22,29 @@ public class ViewerWindow extends JFrame implements AssetViewerWindow {
     private final PreviewPanel previewPanel;
 
     public ViewerWindow(boolean isJava) {
+        Main.registerForFrame(this);
+
         actionManager = new ActionManager(this);
 
         this.setLayout(new Layout());
 
+        AtomicBoolean waitingTime = new AtomicBoolean(true);
+
         if (isJava) {
             AssetSource javaSource = AssetSources.getAssetSource(Main.CONFIG.javaAssetSourceKey());
-            if (javaSource.downloadRequired(Main.DATA_FOLDER)) {
-                try {
-                    javaSource.download(Main.DATA_FOLDER, this, true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Something went wrong while fetching java assets",
-                            "Error! Error!",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                }
-            }
+            checkAssetSource(javaSource, () -> {
+                waitingTime.set(false);
+            });
+            // Wait until the final callback is complete, blocking yes, but kinda required
+            while (waitingTime.get()) {}
             this.assetPanel = new JavaAssetPanel(this, javaSource, false);
         } else {
             AssetSource bedrockSource = AssetSources.getAssetSource(Main.CONFIG.bedrockAssetSourceKey());
-            if (bedrockSource.downloadRequired(Main.DATA_FOLDER)) {
-                try {
-                    bedrockSource.download(Main.DATA_FOLDER, this, true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Something went wrong while fetching bedrock assets",
-                            "Error! Error!",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                }
-            }
-
+            checkAssetSource(bedrockSource, () -> {
+                waitingTime.set(false);
+            });
+            // Wait until the final callback is complete, blocking yes, but kinda required
+            while (waitingTime.get()) {}
             this.assetPanel = new BedrockAssetPanel(this, bedrockSource, false);
         }
 

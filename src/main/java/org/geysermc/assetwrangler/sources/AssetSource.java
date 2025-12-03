@@ -20,8 +20,8 @@ public interface AssetSource {
      */
     String getName();
 
-    default boolean setup(Path dataDirectory, JFrame parent) throws IOException {
-        return download(dataDirectory, parent, false);
+    default boolean setup(Path dataDirectory, JFrame parent, Runnable callback) throws IOException {
+        return download(dataDirectory, parent, callback, false);
     }
 
     /**
@@ -29,14 +29,14 @@ public interface AssetSource {
      * @param dataDirectory The application data directory
      * @return if a download is required
      */
-    boolean downloadRequired(Path dataDirectory);
+    boolean downloadRequired(Path dataDirectory) throws IOException;
 
     /**
      * Downloads the source, no checks should be done if the source is downloaded here, {@link #downloadRequired(Path)} checks that
      * @param dataDirectory The application data directory
      * @param parent the frame, downloads may want to add confirmation
      */
-    boolean download(Path dataDirectory, JFrame parent, boolean update) throws IOException;
+    boolean download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) throws IOException;
 
     /**
      * Gets the paths providing this source, if the array is null, assume the user cancelled the operation.

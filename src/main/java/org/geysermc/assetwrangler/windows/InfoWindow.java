@@ -24,6 +24,7 @@ public class InfoWindow extends JDialog {
 
     public InfoWindow(JFrame parent) {
         super(parent);
+        Main.registerForFrame(this);
         this.setLayout(new FlowLayout());
         StringBuilder labelText = new StringBuilder("<html>");
         labelText.append(BuildConstants.getInstance().getName());

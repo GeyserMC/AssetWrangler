@@ -26,6 +26,7 @@ import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @Getter
@@ -42,6 +43,8 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
     private boolean savesRequired = false;
 
     public MappingsWindow() {
+        Main.registerForFrame(this);
+
         actionManager = new ActionManager(this);
 
         metaLoader = YamlConfigurationLoader.builder()
@@ -72,34 +75,18 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
         }
 
         AssetSource javaSource = AssetSources.getAssetSource(Main.CONFIG.javaAssetSourceKey());
-        if (javaSource.downloadRequired(Main.DATA_FOLDER)) {
-            try {
-                javaSource.download(Main.DATA_FOLDER, this, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Something went wrong while fetching java assets",
-                        "Error! Error!",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
-        }
-
         AssetSource bedrockSource = AssetSources.getAssetSource(Main.CONFIG.bedrockAssetSourceKey());
-        if (bedrockSource.downloadRequired(Main.DATA_FOLDER)) {
-            try {
-                bedrockSource.download(Main.DATA_FOLDER, this, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Something went wrong while fetching bedrock assets",
-                        "Error! Error!",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
-        }
+
+        AtomicBoolean waitingTime = new AtomicBoolean(true);
+
+        checkAssetSource(javaSource, () -> {
+            checkAssetSource(bedrockSource, () -> {
+                waitingTime.set(false);
+            });
+        });
+
+        // Wait until the final callback is complete, blocking yes, but kinda required
+        while (waitingTime.get()) {}
 
         mappings = MappingUtils.getMappings(Main.mappingFile.toFile());
 
@@ -189,6 +176,7 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
     public void offerSaveIfRequired(Consumer<Boolean> afterAction) {
         if (isSavesRequired()) {
             JDialog dialog = new JDialog(MappingsWindow.this, "Save?");
+            Main.registerForFrame(dialog);
             dialog.setLayout(new FlowLayout());
 
             dialog.add(new JLabel("You have unsaved changes! Would you like to save?"));
