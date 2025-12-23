@@ -30,6 +30,8 @@ public class BedrockAssetPanel extends AssetPanel {
 
         Asset animatedAsset = rootAsset.resolve("textures/flipbook_textures.json");
 
+        if (animatedAsset == null) return; // Nothing animated here!
+
         try {
             JsonArray flipbookArray = JsonParser.parseReader(new FileReader(animatedAsset.getPath().toFile())).getAsJsonArray();
 

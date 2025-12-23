@@ -1,13 +1,16 @@
 package org.geysermc.assetwrangler.panels;
 
 import org.geysermc.assetwrangler.Main;
+import org.geysermc.assetwrangler.keybinds.Keybind;
 import org.geysermc.assetwrangler.windows.AssetDirectorySelectorWindow;
 import org.geysermc.assetwrangler.windows.MappingsWindow;
 import org.geysermc.assetwrangler.config.Config;
 import org.geysermc.assetwrangler.windows.InfoWindow;
 
 import javax.swing.*;
+import javax.swing.plaf.ButtonUI;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +48,7 @@ public class AssetMapperToolBar extends JMenuBar {
                             new MappingsWindow();
                         }
                     });
-                }),
+                }, Keybind.ctrl(KeyEvent.VK_N)),
                 TooltipItem.of("Open", () -> {
                     main.offerSaveIfRequired(b -> {
                         if (b != null) {
@@ -65,9 +68,15 @@ public class AssetMapperToolBar extends JMenuBar {
                             new MappingsWindow();
                         }
                     });
-                }),
-                TooltipItem.of("Save", main::save),
-                TooltipItem.of("Save As", main::saveAs)
+                }, Keybind.ctrl(KeyEvent.VK_O)),
+                TooltipItem.of(
+                        "Save", main::save,
+                        Keybind.ctrl(KeyEvent.VK_S)
+                ),
+                TooltipItem.of(
+                        "Save As", main::saveAs,
+                        Keybind.ctrlShift(KeyEvent.VK_S)
+                )
         );
         createPopupMenu(
                 "Edit",
@@ -77,14 +86,14 @@ public class AssetMapperToolBar extends JMenuBar {
                     } else {
                         JOptionPane.showMessageDialog(main, "Nothing to undo!", "Uh oh", JOptionPane.WARNING_MESSAGE);
                     }
-                }, main, KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx())),
+                }, Keybind.ctrl(KeyEvent.VK_Z)),
                 TooltipItem.of("Redo", () -> {
                     if (main.getActionManager().canRedo()) {
                         main.getActionManager().redo();
                     } else {
                         JOptionPane.showMessageDialog(main, "Nothing to redo!", "Uh oh", JOptionPane.WARNING_MESSAGE);
                     }
-                }, main, KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()))
+                }, Keybind.ctrl(KeyEvent.VK_Y))
         );
         createPopupMenu(
                 "View",
@@ -118,6 +127,9 @@ public class AssetMapperToolBar extends JMenuBar {
                 }),
                 TooltipItem.of("Set Bedrock Relative Path", () -> {
                     new AssetDirectorySelectorWindow(main.getBedrockAssetPanel());
+                }),
+                TooltipItem.of("Set Hidden File Names", () -> {
+
                 })
         );
         createPopupMenu(
@@ -133,6 +145,7 @@ public class AssetMapperToolBar extends JMenuBar {
 
         for (TooltipItem item : items) {
             JMenuItem menuItem = new JMenuItem(item.name());
+            if (item.keybind() != null) menuItem.setAccelerator(item.keybind().getKeyStroke());
             menuItem.addActionListener(e -> item.onClick(menuItem));
             menu.add(menuItem);
         }

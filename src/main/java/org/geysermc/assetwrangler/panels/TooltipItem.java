@@ -1,5 +1,6 @@
 package org.geysermc.assetwrangler.panels;
 
+import org.geysermc.assetwrangler.keybinds.Keybind;
 import org.geysermc.assetwrangler.windows.MappingsWindow;
 
 import javax.swing.*;
@@ -14,6 +15,10 @@ public interface TooltipItem {
     String name();
 
     void onClick(JMenuItem item);
+
+    default Keybind keybind() {
+        return null;
+    }
 
     static TooltipItem of(String name, Consumer<JMenuItem> onClick) {
         return new TooltipItem() {
@@ -33,17 +38,7 @@ public interface TooltipItem {
         return of(name, (item) -> onClick.run());
     }
 
-    static TooltipItem of(String name, Runnable onClick, MappingsWindow main, KeyStroke keyStroke) {
-        InputMap inputMap = main.getLayeredPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-
-        inputMap.put(keyStroke, name);
-        main.getLayeredPane().getActionMap().put(name, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onClick.run();
-            }
-        });
-
+    static TooltipItem of(String name, Runnable onClick, Keybind keybind) {
         return new TooltipItem() {
             @Override
             public String name() {
@@ -53,6 +48,11 @@ public interface TooltipItem {
             @Override
             public void onClick(JMenuItem menuItem) {
                 onClick.run();
+            }
+
+            @Override
+            public Keybind keybind() {
+                return keybind;
             }
         };
     }
