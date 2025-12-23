@@ -27,9 +27,7 @@ public interface AssetViewerWindow {
 
     default void checkAssetSource(AssetSource assetSource, Runnable callback) {
         try {
-            if (assetSource.downloadRequired(Main.DATA_FOLDER)) {
-                assetSource.download(Main.DATA_FOLDER, (JFrame) this, callback, true);
-            } else callback.run();
+            assetSource.download(Main.DATA_FOLDER, (JFrame) this, callback, true);
         } catch (IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(

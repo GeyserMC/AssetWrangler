@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.sources.AssetSource;
+import org.geysermc.assetwrangler.utils.DialogUtils;
 import org.geysermc.assetwrangler.utils.WebUtils;
 
 import javax.swing.*;
@@ -40,39 +41,27 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
         return dataPath;
     }
 
-    @SneakyThrows
     @Override
-    public boolean downloadRequired(Path dataDirectory) {
+    public void download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) throws IOException {
+        boolean shouldDownload = false;
+
         fetchVersionManifestIfRequired();
         Path storedVersion = getStoredVersionPath(dataDirectory);
-        if (Files.notExists(storedVersion)) return true;
-
-        try {
+        if (Files.exists(storedVersion)) {
             String currentVersion = Files.readString(storedVersion);
 
             if (!currentVersion.equals(getLatestVersionTag())) {
-                int option = JOptionPane.showOptionDialog(
-                        null,
-                        "A new version of java assets can be downloaded! Would you like to get the new version?",
-                        "Options, options...",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE, null, null, null
+                shouldDownload = DialogUtils.yesOrNo(
+                        null, "Options, options...",
+                        "A new version of java assets can be downloaded! Would you like to get the new version?"
                 );
-
-                return option == JOptionPane.YES_OPTION;
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } else {
+            shouldDownload = true;
+            Files.writeString(storedVersion, getLatestVersionTag());
         }
 
-        return false;
-    }
-
-    @Override
-    public boolean download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) throws IOException {
-        fetchVersionManifestIfRequired();
-        Path storedVersion = getStoredVersionPath(dataDirectory);
-        if (Files.notExists(storedVersion)) return false;
+        if (!shouldDownload || Files.notExists(storedVersion)) return;
 
         JDialog dialog = new JDialog(parent);
         Main.registerForFrame(dialog);
@@ -188,8 +177,6 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
         });
 
         t.start();
-
-        return true;
     }
 
     private void fetchVersionManifestIfRequired() {

@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.assetwrangler.Main;
+import org.geysermc.assetwrangler.utils.DialogUtils;
 import org.geysermc.assetwrangler.utils.NetUtils;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -19,47 +20,27 @@ import java.util.zip.ZipInputStream;
 
 public abstract class GitHubAssetSource implements AssetSource {
     @Override
-    public boolean downloadRequired(Path dataDirectory) {
-        Path directory = dataDirectory.resolve("data/github/%s/%s".formatted(branch(), repo()));
-        Path hashFile = dataDirectory.resolve("data/github/%s/%s.hash".formatted(branch(), repo()));
-        try {
-            Files.createDirectories(directory.getParent());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        if (Files.exists(directory)) {
-            try {
-                String latestHash = getLatestHash();
-
-                return !latestHash.equals(Files.readString(hashFile));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean download(Path dataDirectory, JFrame parentFrame, Runnable callback, boolean update) throws IOException {
-        if (update) {
-            int choice = JOptionPane.showOptionDialog(
-                    parentFrame,
-                    "Would you like to update the source `%s`?".formatted(getKey()),
-                    "Download Confirmation",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    Main.ICON, null, null
-            );
-
-            if (choice != JOptionPane.YES_OPTION) return false;
-        }
-
-        Path tempDownload = dataDirectory.resolve("tmp/github/%s/%s.zip".formatted(branch(), repo()));
+    public void download(Path dataDirectory, JFrame parentFrame, Runnable callback, boolean update) throws IOException {
         Path directory = dataDirectory.resolve("data/github/%s/%s".formatted(branch(), repo()));
         Path hashFile = dataDirectory.resolve("data/github/%s/%s.hash".formatted(branch(), repo()));
         Files.createDirectories(directory.getParent());
+
+        if (Files.exists(directory)) {
+            String latestHash = getLatestHash();
+            if (latestHash.equals(Files.readString(hashFile))) return;
+        }
+
+        if (update) {
+            boolean choice = DialogUtils.yesOrNo(
+                    parentFrame,
+                    "Download Confirmation",
+                    "Would you like to update the source `%s`?".formatted(getKey())
+            );
+
+            if (choice) return;
+        }
+
+        Path tempDownload = dataDirectory.resolve("tmp/github/%s/%s.zip".formatted(branch(), repo()));
         Files.createDirectories(tempDownload.getParent());
 
         URL url = NetUtils.asUrl("https://github.com/%s/archive/refs/heads/%s.zip".formatted(repo(), branch()));
@@ -114,8 +95,6 @@ public abstract class GitHubAssetSource implements AssetSource {
         zis.close();
 
         callback.run();
-
-        return true;
     }
 
     private String getLatestHash() throws IOException {

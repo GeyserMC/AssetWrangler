@@ -17,6 +17,10 @@ public class Asset {
             "textures/items", "textures/item",
             "textures/ui", "textures/gui"
     );
+    private static final List<String> FORBIDDEN_FILE_NAMES = List.of(
+            "_list.json", "_all.json", // TODO remove these 2 when I add proper java client asset downloading
+            "desktop.ini", "__brarchive"
+    );
 
     private final String relativePath;
     private final Path path;
@@ -30,12 +34,7 @@ public class Asset {
         this.name = name;
         this.directory = directory;
         this.children = directory ? Arrays.stream(path.toFile().listFiles())
-                .filter(f ->
-                        !f.getName().equals("_list.json") && // TODO remove when I add proper java client asset downloading
-                                !f.getName().equals("_all.json") &&
-                                !f.getName().equals("desktop.ini") &&
-                                !f.getName().equals("__brarchive")
-                )
+                .filter(f -> !FORBIDDEN_FILE_NAMES.contains(f.getName()))
                 .map(f -> new Asset(root, f.toPath(), f.getName(), f.isDirectory()))
                 .toList() : List.of();
     }

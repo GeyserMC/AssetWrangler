@@ -3,6 +3,7 @@ package org.geysermc.assetwrangler.sources;
 import lombok.SneakyThrows;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.assetwrangler.Main;
+import org.geysermc.assetwrangler.utils.DialogUtils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -16,19 +17,15 @@ import java.util.stream.Collectors;
 
 public abstract class LocalAssetSource implements AssetSource {
     @Override
-    public boolean downloadRequired(Path dataDirectory) {
+    public void download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) throws IOException {
         Path storagePath = dataDirectory.resolve("data/%s.path".formatted(getKey()));
-        try {
-            Files.createDirectories(storagePath.getParent());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        Files.createDirectories(storagePath.getParent());
+
+        if (Files.exists(storagePath) && update) {
+            callback.run();
+            return;
         }
 
-        return Files.notExists(storagePath);
-    }
-
-    @Override
-    public boolean download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) throws IOException {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         chooser.setDialogTitle("Select %s Asset Directory".formatted(getType().getName()));
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -37,24 +34,15 @@ public abstract class LocalAssetSource implements AssetSource {
         int chosen = chooser.showOpenDialog(parent);
 
         if (chosen == JFileChooser.APPROVE_OPTION) {
-            Path storagePath = dataDirectory.resolve("data/%s.path".formatted(getKey()));
-            Files.createDirectories(storagePath.getParent());
-
             Files.writeString(
                     storagePath,
                     Arrays.stream(chooser.getSelectedFiles())
                             .map(File::getAbsolutePath)
                             .collect(Collectors.joining(File.pathSeparator))
             );
-
-            callback.run();
-
-            return true;
         }
 
         callback.run();
-
-        return false;
     }
 
     @SneakyThrows

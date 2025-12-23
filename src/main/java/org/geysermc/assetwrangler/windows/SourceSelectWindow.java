@@ -91,12 +91,12 @@ public class SourceSelectWindow extends JFrame {
                     Main.CONFIG.bedrockAssetSourceKey(bedrockId);
 
                     try {
-                        javaSource.setup(Main.DATA_FOLDER, SourceSelectWindow.this, () -> {
+                        javaSource.download(Main.DATA_FOLDER, SourceSelectWindow.this, () -> {
                             try {
-                                bedrockSource.setup(Main.DATA_FOLDER, SourceSelectWindow.this, () -> {
+                                bedrockSource.download(Main.DATA_FOLDER, SourceSelectWindow.this, () -> {
                                     onComplete.run();
                                     this.dispose();
-                                });
+                                }, false);
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                                 JOptionPane.showMessageDialog(
@@ -106,7 +106,7 @@ public class SourceSelectWindow extends JFrame {
                                         JOptionPane.ERROR_MESSAGE
                                 );
                             }
-                        });
+                        }, false);
                     } catch (IOException ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(

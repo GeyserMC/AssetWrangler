@@ -15,13 +15,8 @@ public abstract class BedrockInstalledAssetSource implements AssetSource {
     public abstract String missingMessage();
 
     @Override
-    public boolean downloadRequired(Path dataDirectory) {
-        return false;
-    }
-
-    @Override
-    public boolean download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) {
-        return false;
+    public void download(Path dataDirectory, JFrame parent, Runnable callback, boolean update) {
+        callback.run();
     }
 
     @Override
