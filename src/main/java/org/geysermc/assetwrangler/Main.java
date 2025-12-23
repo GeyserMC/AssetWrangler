@@ -20,6 +20,8 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.desktop.AboutEvent;
+import java.awt.desktop.AboutHandler;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -55,9 +57,9 @@ public class Main {
 
     static {
         if (Main.IS_WINDOWS) {
-            DATA_FOLDER = Path.of(System.getenv("APPDATA")).resolve("AssetMapper");
+            DATA_FOLDER = Path.of(System.getenv("APPDATA")).resolve("AssetWrangler");
         } else {
-            DATA_FOLDER = Path.of(System.getProperty("user.home")).resolve("AssetMapper");
+            DATA_FOLDER = Path.of(System.getProperty("user.home")).resolve("AssetWrangler");
         }
 
         try {

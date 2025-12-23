@@ -118,7 +118,8 @@ public class AssetMapperToolBar extends JMenuBar {
                 }),
                 TooltipItem.optionToggle("Show Bedrock Metadata Files", config::showBedrockMetadataFiles, config::showBedrockMetadataFiles, (item) -> {
                     main.refreshView();
-                })
+                }),
+                TooltipItem.optionToggle("Disable Animation Interpolation", config::disableAnimationInterpolation, config::disableAnimationInterpolation)
         );
         createPopupMenu(
                 "Tools",
@@ -127,10 +128,10 @@ public class AssetMapperToolBar extends JMenuBar {
                 }),
                 TooltipItem.of("Set Bedrock Relative Path", () -> {
                     new AssetDirectorySelectorWindow(main.getBedrockAssetPanel());
-                }),
-                TooltipItem.of("Set Hidden File Names", () -> {
-
                 })
+//                TooltipItem.of("Set Hidden File Names", () -> {
+//
+//                })
         );
         createPopupMenu(
                 "Info",

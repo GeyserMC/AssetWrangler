@@ -1,5 +1,6 @@
 package org.geysermc.assetwrangler.components;
 
+import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
 
 import javax.swing.*;
@@ -64,7 +65,7 @@ public class AnimatedLabel extends JLabel implements ClosableComponent {
     public void calculateIcon() {
         Icon icon;
         BufferedImage image;
-        if (interpolate) {
+        if (interpolate && !Main.CONFIG.disableAnimationInterpolation()) {
             double progress = progressCurrently / imageParts.get(currentIndex).time;
 
             BufferedImage img1 = imageParts.get(currentIndex).image;

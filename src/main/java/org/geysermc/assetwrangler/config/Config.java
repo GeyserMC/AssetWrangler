@@ -17,6 +17,7 @@ public class Config {
     private boolean showTransformedEntries = false;
     private boolean showJavaMetadataFiles = false;
     private boolean showBedrockMetadataFiles = false;
+    private boolean disableAnimationInterpolation = false;
 
     private String javaAssetSourceKey = "";
     private String bedrockAssetSourceKey = "";
