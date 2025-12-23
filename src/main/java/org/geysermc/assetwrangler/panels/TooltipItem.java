@@ -4,6 +4,7 @@ import org.geysermc.assetwrangler.keybinds.Keybind;
 import org.geysermc.assetwrangler.windows.MappingsWindow;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicCheckBoxUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -18,6 +19,13 @@ public interface TooltipItem {
 
     default Keybind keybind() {
         return null;
+    }
+
+    default JMenuItem getMenuItem() {
+        JMenuItem menuItem = new JMenuItem(this.name());
+        if (this.keybind() != null) menuItem.setAccelerator(this.keybind().getKeyStroke());
+        menuItem.addActionListener(e -> this.onClick(menuItem));
+        return menuItem;
     }
 
     static TooltipItem of(String name, Consumer<JMenuItem> onClick) {
@@ -63,19 +71,31 @@ public interface TooltipItem {
 
     static TooltipItem optionToggle(String name, Consumer<Boolean> set, Supplier<Boolean> get, Consumer<JMenuItem> onClick) {
         return new TooltipItem() {
-            private static final String ON = " ✓";
-            private static final String OFF = "";
-
             @Override
             public String name() {
-                return name + (get.get() ? ON : OFF);
+                return name;
             }
 
             @Override
             public void onClick(JMenuItem item) {
                 set.accept(!get.get());
-                item.setText(name());
+                item.setSelected(get.get());
                 onClick.accept(item);
+            }
+
+            @Override
+            public JMenuItem getMenuItem() {
+                JMenuItem menuItem = TooltipItem.super.getMenuItem();
+                menuItem.setLayout(new BoxLayout(menuItem, BoxLayout.X_AXIS));
+                menuItem.setBorder(BorderFactory.createCompoundBorder(
+                        menuItem.getBorder(),
+                        BorderFactory.createEmptyBorder(0, 10, 0, 10)
+                ));
+                menuItem.setAlignmentX(Component.LEFT_ALIGNMENT);
+                menuItem.setUI(new BasicCheckBoxUI());
+                menuItem.setSelected(get.get());
+                menuItem.setHorizontalAlignment(SwingConstants.LEFT);
+                return menuItem;
             }
         };
     }

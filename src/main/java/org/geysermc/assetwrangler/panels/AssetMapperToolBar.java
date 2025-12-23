@@ -144,10 +144,7 @@ public class AssetMapperToolBar extends JMenuBar {
         JMenu menu = new JMenu(name);
 
         for (TooltipItem item : items) {
-            JMenuItem menuItem = new JMenuItem(item.name());
-            if (item.keybind() != null) menuItem.setAccelerator(item.keybind().getKeyStroke());
-            menuItem.addActionListener(e -> item.onClick(menuItem));
-            menu.add(menuItem);
+            menu.add(item.getMenuItem());
         }
 
         this.add(menu);
