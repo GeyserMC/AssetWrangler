@@ -1,6 +1,8 @@
 package org.geysermc.assetwrangler.treemodels;
 
 import com.google.gson.JsonParser;
+import com.google.gson.Strictness;
+import com.google.gson.stream.JsonReader;
 import com.twelvemonkeys.image.BufferedImageIcon;
 import lombok.Getter;
 import org.geysermc.assetwrangler.components.previews.*;
@@ -211,9 +213,9 @@ public class AssetTreeModel implements TreeModel {
                             file.getName().endsWith(".mcmeta")
             ) {
                 try {
-                    return new JsonPreview(JsonParser.parseReader(
-                            new FileReader(filePath)
-                    ), relativePath);
+                    JsonReader jsonReader = new JsonReader(new FileReader(filePath));
+                    jsonReader.setStrictness(Strictness.LENIENT);
+                    return new JsonPreview(JsonParser.parseReader(jsonReader), relativePath);
                 } catch (FileNotFoundException e) {
                     return null;
                 }
