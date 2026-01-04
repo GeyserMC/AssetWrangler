@@ -1,37 +1,23 @@
 package org.geysermc.assetwrangler.panels;
 
 import lombok.Getter;
-import lombok.ToString;
-import org.geysermc.assetwrangler.Main;
-import org.geysermc.assetwrangler.components.AnimatedLabel;
 import org.geysermc.assetwrangler.components.MainComponentMenu;
-import org.geysermc.assetwrangler.components.SoundPreview;
 import org.geysermc.assetwrangler.treemodels.AssetTreeModel;
 import org.geysermc.assetwrangler.utils.Asset;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
 import org.geysermc.assetwrangler.windows.AssetViewerWindow;
-import org.geysermc.assetwrangler.windows.MappingsWindow;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.TreeModelListener;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public abstract class AssetPanel extends BasePanel {
     @Getter
@@ -64,11 +50,9 @@ public abstract class AssetPanel extends BasePanel {
 
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(20);
-        tree = new JTree(new AssetTreeModel(this, rootAsset.resolve(getMetaSection().getRelativePath()), rootName));
+        tree = new JTree(new AssetTreeModel(this, rootAsset.resolve(getMetaSection().getRelativePath()), getRootDisplayName()));
         tree.setBorder(new EmptyBorder(0, 0, 0, 0));
-        TreeSelectionModel selectionModel = new DefaultTreeSelectionModel();
-        selectionModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-        tree.setSelectionModel(selectionModel);
+        tree.setSelectionModel(new DefaultTreeSelectionModel());
         tree.setCellRenderer((tree1, value, selected, expanded, leaf, row, hasFocus) -> {
             AssetTreeModel.Entry entry = (AssetTreeModel.Entry) value;
 
@@ -85,7 +69,7 @@ public abstract class AssetPanel extends BasePanel {
                             AssetTreeModel.Entry entry = (AssetTreeModel.Entry) treePath.getLastPathComponent();
 
                             if (entry.canSelect()) {
-                                MainComponentMenu menu = new MainComponentMenu(getMetaSection(), entry);
+                                MainComponentMenu menu = new MainComponentMenu(AssetPanel.this, entry);
                                 menu.show(e.getComponent(), e.getX(), e.getY());
                             }
                         }
@@ -120,7 +104,7 @@ public abstract class AssetPanel extends BasePanel {
             }
         }
 
-        tree.setModel(new AssetTreeModel(this, this.rootAsset.resolve(getMetaSection().getRelativePath()), this.rootName));
+        tree.setModel(new AssetTreeModel(this, this.rootAsset.resolve(getMetaSection().getRelativePath()), getRootDisplayName()));
 
         for (int i = 0; i < tree.getRowCount(); i++){
             if (expandedPaths.contains(((AssetTreeModel.Entry) tree.getPathForRow(i).getLastPathComponent()).getRelativePath())) {
@@ -159,9 +143,17 @@ public abstract class AssetPanel extends BasePanel {
                 .toList();
     }
 
+    public String getRootDisplayName() {
+        if (getMetaSection().getRelativePath() == null || getMetaSection().getRelativePath().isBlank()) {
+            return this.rootName;
+        } else {
+            return "%s (%s)".formatted(this.rootName, getMetaSection().getRelativePath());
+        }
+    }
+
     public abstract boolean isMapped(String path);
     public abstract void setPreviewComponent(AssetViewerWindow main, JComponent component);
     public abstract JsonMappingsMeta.Section getMetaSection();
     public abstract boolean isAssetAnimated(String filePath);
-    public abstract AnimationMeta getAnimationMeta(BufferedImage img, String filePath) throws IOException;
+    public abstract AnimationMeta getAnimationMeta(BufferedImage img, String filePath);
 }

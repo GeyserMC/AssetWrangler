@@ -10,7 +10,6 @@ import org.geysermc.assetwrangler.utils.AnimationMeta;
 import org.geysermc.assetwrangler.utils.Asset;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 import org.geysermc.assetwrangler.windows.AssetViewerWindow;
-import org.geysermc.assetwrangler.windows.MappingsWindow;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -73,7 +72,7 @@ public class BedrockAssetPanel extends AssetPanel {
     }
 
     @Override
-    public AnimationMeta getAnimationMeta(BufferedImage img, String filePath) throws IOException {
+    public AnimationMeta getAnimationMeta(BufferedImage img, String filePath) {
         return ANIMATED_TEXTURES.get(filePath);
     }
 }

@@ -1,6 +1,7 @@
-package org.geysermc.assetwrangler.components;
+package org.geysermc.assetwrangler.components.previews;
 
 import org.geysermc.assetwrangler.Main;
+import org.geysermc.assetwrangler.components.ClosableComponent;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
 
 import javax.swing.*;
@@ -9,7 +10,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AnimatedLabel extends JLabel implements ClosableComponent {
+public class AnimatedTexturePreview extends JLabel implements ClosableComponent {
     private final List<ImagePart> imageParts;
     private final boolean interpolate;
 
@@ -19,7 +20,7 @@ public class AnimatedLabel extends JLabel implements ClosableComponent {
     private int currentIndex = 0;
     private int nextIndex = 1;
 
-    public AnimatedLabel(BufferedImage img, AnimationMeta animationMeta, String relativePath) {
+    public AnimatedTexturePreview(BufferedImage img, AnimationMeta animationMeta, String relativePath) {
         this.setHorizontalTextPosition(JLabel.RIGHT);
         this.setVerticalTextPosition(JLabel.TOP);
         this.interpolate = animationMeta.isInterpolate();

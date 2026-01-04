@@ -1,7 +1,6 @@
 package org.geysermc.assetwrangler.panels;
 
 import lombok.Getter;
-import org.geysermc.assetwrangler.components.AnimatedLabel;
 import org.geysermc.assetwrangler.components.ClosableComponent;
 
 import javax.swing.*;

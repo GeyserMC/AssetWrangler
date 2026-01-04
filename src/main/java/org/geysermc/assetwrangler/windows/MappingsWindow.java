@@ -21,9 +21,9 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -111,12 +111,7 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         this.setMinimumSize(layoutManager.minimumLayoutSize(this));
 
-        this.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {
-
-            }
-
+        this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 MappingsWindow.this.offerSaveIfRequired(b -> {
@@ -127,32 +122,38 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
                     }
                 });
             }
-
-            @Override
-            public void windowClosed(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowIconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeiconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-
-            }
         });
+    }
+
+    public void reload() {
+        metaLoader = YamlConfigurationLoader.builder()
+                .path(Path.of(Main.mappingFile.toString() + ".asset_mapper_meta.yml"))
+                .indent(4)
+                .nodeStyle(NodeStyle.BLOCK)
+                .build();
+
+        try {
+            CommentedConfigurationNode node = metaLoader.load();
+            mappingsMeta = node.get(JsonMappingsMeta.class);
+            if (node.isNull()) {
+                CommentedConfigurationNode newRoot = CommentedConfigurationNode.root(metaLoader.defaultOptions());
+                newRoot.set(new Config());
+                metaLoader.save(newRoot);
+                mappingsMeta = newRoot.get(JsonMappingsMeta.class);
+            }
+        } catch (ConfigurateException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(
+                    null, "Something went wrong while reading the mappings meta :(",
+                    "Error! Error!", JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        mappings = MappingUtils.getMappings(Main.mappingFile.toFile());
+
+        this.bedrockAssetPanel.redraw();
+        this.javaAssetPanel.redraw();
     }
 
     public boolean isJavaMapped(String path) {

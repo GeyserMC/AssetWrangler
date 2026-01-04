@@ -6,7 +6,6 @@ import org.geysermc.assetwrangler.sources.AssetSource;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 import org.geysermc.assetwrangler.windows.AssetViewerWindow;
-import org.geysermc.assetwrangler.windows.MappingsWindow;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -14,7 +13,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class JavaAssetPanel extends AssetPanel {
     public JavaAssetPanel(AssetViewerWindow main, AssetSource assetSource, boolean isForMapping) {
@@ -50,9 +48,13 @@ public class JavaAssetPanel extends AssetPanel {
     }
 
     @Override
-    public AnimationMeta getAnimationMeta(BufferedImage img, String filePath) throws IOException {
-        return AnimationMeta.fromJavaJson(img, JsonParser.parseReader(
-                new FileReader(filePath + ".mcmeta")
-        ).getAsJsonObject());
+    public AnimationMeta getAnimationMeta(BufferedImage img, String filePath) {
+        try {
+            return AnimationMeta.fromJavaJson(img, JsonParser.parseReader(
+                    new FileReader(filePath + ".mcmeta")
+            ).getAsJsonObject());
+        } catch (IOException e) {
+            return null;
+        }
     }
 }

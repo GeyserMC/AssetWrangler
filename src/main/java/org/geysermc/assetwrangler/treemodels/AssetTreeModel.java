@@ -1,27 +1,28 @@
 package org.geysermc.assetwrangler.treemodels;
 
+import com.google.gson.JsonParser;
+import com.twelvemonkeys.image.BufferedImageIcon;
 import lombok.Getter;
-import org.geysermc.assetwrangler.components.AnimatedLabel;
-import org.geysermc.assetwrangler.components.SoundPreview;
+import org.geysermc.assetwrangler.components.previews.*;
 import org.geysermc.assetwrangler.panels.AssetPanel;
+import org.geysermc.assetwrangler.utils.AnimationMeta;
 import org.geysermc.assetwrangler.utils.Asset;
+import org.geysermc.assetwrangler.utils.ColorUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.TreeModelListener;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import static org.geysermc.assetwrangler.utils.Asset.getMappedLocation;
 
@@ -150,8 +151,29 @@ public class AssetTreeModel implements TreeModel {
         }
 
         public JComponent getMainComponent() {
+            Color c = null;
+
+            AssetPanel panel = treeModel.panel;
+
+            String relativePath = this.relativePath;
+            int dotIndex = relativePath.indexOf('.');
+            if (dotIndex != -1) relativePath = relativePath.substring(0, dotIndex);
+
+            if (panel.isMapped(relativePath)) {
+                c = Color.GREEN;
+            } else if (panel.getMetaSection().getMatchingPaths().contains(relativePath)) {
+                c = Color.MAGENTA;
+            } else if (panel.getMetaSection().getIgnoredPaths().contains(relativePath)) {
+                c = Color.RED;
+            } else if (panel.getMetaSection().getTransformedPaths().contains(relativePath)) {
+                c = Color.CYAN;
+            }
+
             JLabel label = new JLabel(this.name);
             label.setInheritsPopupMenu(true);
+            if (c != null) {
+                label.setIcon(new BufferedImageIcon(ColorUtils.getSolidImg(c)));
+            }
             return label;
         }
 
@@ -161,58 +183,22 @@ public class AssetTreeModel implements TreeModel {
                     file.getName().endsWith(".png") ||
                             file.getName().endsWith(".tga")
             ) {
-                if (treeModel.panel.isAssetAnimated(filePath)) {
-                    try {
-                        BufferedImage image = ImageIO.read(file);
-                        return new AnimatedLabel(
-                                image, treeModel.panel.getAnimationMeta(image, filePath),
-                                relativePath
-                        );
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return new JLabel("Error reading image.");
-                    }
-                }
-                StringBuilder label = new StringBuilder("<html>");
-                label.append("Path: ");
-                label.append(relativePath);
-                Icon icon;
+                BufferedImage image;
+
                 try {
-                    BufferedImage image = ImageIO.read(file);
-
-                    float scaleX = 256f / image.getWidth();
-                    float scaleY = 256f / image.getHeight();
-
-                    float scale;
-                    int xOffset = 0, yOffset = 0;
-                    if (scaleX > scaleY) {
-                        scale = scaleY;
-                        xOffset = (256 - image.getWidth()) / 2;
-                    } else if (scaleX < scaleY) {
-                        scale = scaleX;
-                        yOffset = (256 - image.getHeight()) / 2;
-                    } else {
-                        scale = scaleX;
-                    }
-
-                    label.append("<br/>Resolution: %dx%d".formatted(image.getWidth(), image.getHeight()));
-                    BufferedImage scaledImage = new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB);
-                    Graphics2D graphics = (Graphics2D) scaledImage.getGraphics();
-                    graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-                    graphics.drawImage(image, xOffset, yOffset, (int) (image.getWidth() * scale), (int) (image.getHeight() * scale), null);
-                    icon = new ImageIcon(scaledImage);
+                    image = ImageIO.read(file);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    icon = FileSystemView.getFileSystemView().getSystemIcon(file);
+                    image = new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB);
+                    Graphics g = image.getGraphics();
+                    g.drawString("Unable to load image.", 0, 0);
                 }
 
+                if (treeModel.panel.isAssetAnimated(filePath)) {
+                    AnimationMeta meta = treeModel.panel.getAnimationMeta(image, filePath);
+                    if (meta != null) return new AnimatedTexturePreview(image, meta, relativePath);
+                }
 
-
-                label.append("</html>");
-                JLabel jLabel = new JLabel(label.toString(), icon, SwingConstants.LEFT);
-                jLabel.setHorizontalTextPosition(JLabel.RIGHT);
-                jLabel.setVerticalTextPosition(JLabel.TOP);
-                return jLabel;
+                return new TexturePreview(image, relativePath);
             } else if (
                     file.getName().endsWith(".ogg") ||
                             file.getName().endsWith(".mp3") ||
@@ -222,60 +208,26 @@ public class AssetTreeModel implements TreeModel {
                 return new SoundPreview(file, relativePath);
             } else if (
                     file.getName().endsWith(".json") ||
-                            file.getName().endsWith(".lang") ||
+                            file.getName().endsWith(".mcmeta")
+            ) {
+                try {
+                    return new JsonPreview(JsonParser.parseReader(
+                            new FileReader(filePath)
+                    ), relativePath);
+                } catch (FileNotFoundException e) {
+                    return null;
+                }
+            } else if (
+                    file.getName().endsWith(".lang") ||
                             file.getName().endsWith(".txt") ||
                             file.getName().endsWith(".fsh") ||
                             file.getName().endsWith(".vsh") ||
                             file.getName().endsWith(".glsl") ||
-                            file.getName().endsWith(".material") ||
-                            file.getName().endsWith(".mcmeta")
+                            file.getName().endsWith(".material")
             ) {
-                JPanel panel = new JPanel();
-                panel.setLayout(new GridBagLayout());
-                GridBagConstraints gbc = new GridBagConstraints();
-                gbc.weightx = 1;
-                gbc.fill = GridBagConstraints.BOTH;
-                gbc.gridwidth = GridBagConstraints.REMAINDER;
-                JTextArea textArea = new JTextArea();
-                textArea.setEditable(false);
-                try {
-                    textArea.setText(Files.readString(file.toPath()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    textArea.setText("Error reading file.");
-                }
-                panel.add(textArea, gbc);
-                JScrollPane scrollPane = new JScrollPane(panel);
-                scrollPane.getVerticalScrollBar().setUnitIncrement(20);
-                return scrollPane;
+                return new TextPreview(file);
             } else if (file.getName().endsWith(".zip")) {
-                JPanel panel = new JPanel();
-                panel.setLayout(new GridBagLayout());
-                GridBagConstraints gbc = new GridBagConstraints();
-                gbc.weightx = 1;
-                gbc.fill = GridBagConstraints.BOTH;
-                gbc.gridwidth = GridBagConstraints.REMAINDER;
-
-                JLabel filesText = new JLabel("Files:");
-                filesText.setFont(filesText.getFont().deriveFont(18f));
-                panel.add(filesText, gbc);
-
-                JTextArea textArea = new JTextArea();
-                textArea.setEditable(false);
-                textArea.setBackground(new Color(28, 30, 37));
-                try {
-                    ZipFile zipFile = new ZipFile(file);
-                    String builder = String.join("\n", zipFile.stream().filter(entry -> !entry.isDirectory()).map(ZipEntry::getName).toList());
-                    textArea.append(builder);
-                    zipFile.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    textArea.setText("Error reading file.");
-                }
-                panel.add(textArea, gbc);
-                JScrollPane scrollPane = new JScrollPane(panel);
-                scrollPane.getVerticalScrollBar().setUnitIncrement(20);
-                return scrollPane;
+                return new ZipPreview(file);
             } else {
                 return null;
             }

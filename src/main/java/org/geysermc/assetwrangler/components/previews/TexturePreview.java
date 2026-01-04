@@ -1,0 +1,41 @@
+package org.geysermc.assetwrangler.components.previews;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
+public class TexturePreview extends JLabel {
+    public TexturePreview(BufferedImage image, String relativePath) {
+        StringBuilder label = new StringBuilder("<html>");
+        label.append("Path: ");
+        label.append(relativePath);
+        float scaleX = 256f / image.getWidth();
+        float scaleY = 256f / image.getHeight();
+
+        float scale;
+        int xOffset = 0, yOffset = 0;
+        if (scaleX > scaleY) {
+            scale = scaleY;
+            xOffset = (256 - image.getWidth()) / 2;
+        } else if (scaleX < scaleY) {
+            scale = scaleX;
+            yOffset = (256 - image.getHeight()) / 2;
+        } else {
+            scale = scaleX;
+        }
+
+        label.append("<br/>Resolution: %dx%d".formatted(image.getWidth(), image.getHeight()));
+        BufferedImage scaledImage = new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = (Graphics2D) scaledImage.getGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        graphics.drawImage(image, xOffset, yOffset, (int) (image.getWidth() * scale), (int) (image.getHeight() * scale), null);
+        Icon icon = new ImageIcon(scaledImage);
+        label.append("</html>");
+
+        setText(label.toString());
+        setIcon(icon);
+        setHorizontalAlignment(SwingConstants.LEFT);
+        setHorizontalTextPosition(JLabel.RIGHT);
+        setVerticalTextPosition(JLabel.TOP);
+    }
+}

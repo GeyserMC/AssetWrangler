@@ -48,7 +48,7 @@ public class StartUpWindow extends JFrame {
 
             if (chooser.getFile() == null) return;
 
-            Main.mappingFile = Path.of(chooser.getFile());
+            Main.mappingFile = Path.of(chooser.getDirectory(), chooser.getFile());
 
             try {
                 Files.writeString(Main.mappingFile, "{}");

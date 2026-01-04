@@ -8,9 +8,7 @@ import org.geysermc.assetwrangler.config.Config;
 import org.geysermc.assetwrangler.windows.InfoWindow;
 
 import javax.swing.*;
-import javax.swing.plaf.ButtonUI;
 import java.awt.*;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,7 +31,7 @@ public class AssetMapperToolBar extends JMenuBar {
 
                             if (chooser.getFile() == null) return;
 
-                            Main.mappingFile = Path.of(chooser.getFile());
+                            Main.mappingFile = Path.of(chooser.getDirectory(), chooser.getFile());
 
                             try {
                                 Files.writeString(Main.mappingFile, "{}");
@@ -42,10 +40,7 @@ public class AssetMapperToolBar extends JMenuBar {
                                 JOptionPane.showMessageDialog(main, "Unable to create mapping file!", "Error! Error!", JOptionPane.ERROR_MESSAGE);
                             }
 
-                            main.setVisible(false);
-                            main.invalidate();
-
-                            new MappingsWindow();
+                            main.reload();
                         }
                     });
                 }, Keybind.ctrl(KeyEvent.VK_N)),
@@ -62,10 +57,7 @@ public class AssetMapperToolBar extends JMenuBar {
 
                             Main.mappingFile = Path.of(chooser.getDirectory(), chooser.getFile());
 
-                            main.setVisible(false);
-                            main.invalidate();
-
-                            new MappingsWindow();
+                            main.reload();
                         }
                     });
                 }, Keybind.ctrl(KeyEvent.VK_O)),
