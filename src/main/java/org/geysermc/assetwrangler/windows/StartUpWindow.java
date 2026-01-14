@@ -1,6 +1,7 @@
 package org.geysermc.assetwrangler.windows;
 
 import org.geysermc.assetwrangler.BuildConstants;
+import org.geysermc.assetwrangler.Logger;
 import org.geysermc.assetwrangler.Main;
 
 import javax.swing.*;
@@ -9,10 +10,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class StartUpWindow extends JFrame {
+public class StartUpWindow extends BaseWindow {
     public StartUpWindow() {
-        Main.registerForFrame(this);
-
+        super();
         this.setLayout(new FlowLayout());
         this.add(new JLabel("Welcome to %s! Select an option to begin.".formatted(BuildConstants.getInstance().getName())));
 
@@ -53,8 +53,9 @@ public class StartUpWindow extends JFrame {
             try {
                 Files.writeString(Main.mappingFile, "{}");
             } catch (IOException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(StartUpWindow.this, "Unable to create mapping file!", "Error! Error!", JOptionPane.ERROR_MESSAGE);
+                Logger.errorWithDialog(
+                        "Unable to create mapping file!", ex, StartUpWindow.this
+                );
             }
 
             StartUpWindow.this.setVisible(false);

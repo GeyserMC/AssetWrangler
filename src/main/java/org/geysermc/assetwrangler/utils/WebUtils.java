@@ -1,15 +1,12 @@
 package org.geysermc.assetwrangler.utils;
 
 import org.geysermc.assetwrangler.BuildConstants;
-import org.geysermc.assetwrangler.Main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 
 public class WebUtils {
     /**
@@ -21,7 +18,7 @@ public class WebUtils {
      */
     public static String getBody(String reqURL) throws IOException {
         try {
-            URL url = new URL(reqURL);
+            URL url = new URI(reqURL).toURL();
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.setRequestProperty("User-Agent", getUserAgent()); // Otherwise Java 8 fails on checking updates
@@ -31,6 +28,8 @@ public class WebUtils {
             return connectionToString(con);
         } catch (UnknownHostException e) {
             throw new IllegalStateException("Unable to resolve requested url (%s)! Are you offline?".formatted(reqURL), e);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 

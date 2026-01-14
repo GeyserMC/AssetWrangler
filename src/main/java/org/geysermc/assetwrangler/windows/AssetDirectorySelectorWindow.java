@@ -1,6 +1,5 @@
 package org.geysermc.assetwrangler.windows;
 
-import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.panels.AssetPanel;
 import org.geysermc.assetwrangler.treemodels.AssetTreeModel;
 import org.geysermc.assetwrangler.treemodels.DirectoryAssetTreeModel;
@@ -9,13 +8,12 @@ import javax.swing.*;
 import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
-import java.util.function.Consumer;
 
-public class AssetDirectorySelectorWindow extends JFrame {
+public class AssetDirectorySelectorWindow extends BaseWindow {
     private String selectedPath = "";
 
     public AssetDirectorySelectorWindow(AssetPanel panel) {
-        Main.registerForFrame(this);
+        super();
         this.setSize(500, 500);
         this.setLayout(new LayoutManager() {
             public void addLayoutComponent(String name, Component comp) {}

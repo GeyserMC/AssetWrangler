@@ -1,5 +1,6 @@
 package org.geysermc.assetwrangler.windows;
 
+import org.geysermc.assetwrangler.Logger;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.sources.AssetSource;
@@ -29,12 +30,10 @@ public interface AssetViewerWindow {
         try {
             assetSource.download(Main.DATA_FOLDER, (JFrame) this, callback, true);
         } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    (Component) this,
-                    "Something went wrong while fetching " + assetSource.getName() + " assets",
-                    "Error! Error!",
-                    JOptionPane.ERROR_MESSAGE
+            Logger.errorWithDialog(
+                    "Something went wrong while fetching %s (%s) assets"
+                            .formatted(assetSource.getName(), assetSource.getKey()),
+                    e, (Component) this
             );
         }
     }

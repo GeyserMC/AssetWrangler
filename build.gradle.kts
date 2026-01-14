@@ -25,6 +25,17 @@ dependencies {
     implementation("org.spongepowered:configurate-yaml:4.2.0-GeyserMC-20251111.004649-11")
     implementation("org.spongepowered:configurate-extra-interface:4.2.0-GeyserMC-20251111.004649-11")
 
+    var adventureVersion = "4.25.0"
+    implementation("net.kyori:adventure-api:${adventureVersion}")
+    implementation("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
+    implementation("net.kyori:adventure-text-serializer-legacy:${adventureVersion}")
+    implementation("net.kyori:adventure-text-serializer-plain:${adventureVersion}")
+
+    var log4jVersion = "2.25.3"
+    implementation("org.apache.logging.log4j:log4j-api:${log4jVersion}")
+    implementation("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+    implementation("org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}")
+
     implementation("org.projectlombok:lombok:1.18.42")
     annotationProcessor("org.projectlombok:lombok:1.18.42")
 }
@@ -46,9 +57,8 @@ tasks.processResources {
             "name" to "AssetWrangler",
             "authors" to "Auri and the GeyserMC Team"
         )
-        val propProps = props.entries.joinToString(separator = "\n") {
-            "project.${it.key}=${it.value}"
-        }; File(resourcesDir, "build.properties").writeText(propProps)
+        val propProps = props.entries.joinToString(separator = "\n") { "project.${it.key}=${it.value}" }
+        File(resourcesDir, "build.properties").writeText(propProps) // This must always be on an odd line, or the file is not written in time.
     }
 }
 

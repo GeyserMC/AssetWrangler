@@ -10,6 +10,7 @@ import org.geysermc.assetwrangler.panels.AssetPanel;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
 import org.geysermc.assetwrangler.utils.Asset;
 import org.geysermc.assetwrangler.utils.ColorUtils;
+import org.geysermc.assetwrangler.utils.NinesliceData;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -200,14 +201,20 @@ public class AssetTreeModel implements TreeModel {
                     if (meta != null) return new AnimatedTexturePreview(image, meta, relativePath);
                 }
 
+                if (treeModel.panel.isAssetNinesliced(filePath)) {
+                    NinesliceData data = treeModel.panel.getNineslicedMeta(image, filePath);
+                    if (data != null) return new NineSliceTexturePreview(image, relativePath, data);
+                }
+
                 return new TexturePreview(image, relativePath);
             } else if (
                     file.getName().endsWith(".ogg") ||
                             file.getName().endsWith(".mp3") ||
-                            file.getName().endsWith(".wav") ||
-                            file.getName().endsWith(".fsb")
+                            file.getName().endsWith(".wav")
             ) {
                 return new SoundPreview(file, relativePath);
+            } else if (file.getName().endsWith(".fsb")) {
+                return new NoPlaySoundPreview(file, relativePath);
             } else if (
                     file.getName().endsWith(".json") ||
                             file.getName().endsWith(".mcmeta")
@@ -219,9 +226,10 @@ public class AssetTreeModel implements TreeModel {
                 } catch (FileNotFoundException e) {
                     return null;
                 }
+            } else if (file.getName().endsWith(".txt")) { // Can contain legacy color codes
+                return new ComponentPreview(file);
             } else if (
                     file.getName().endsWith(".lang") ||
-                            file.getName().endsWith(".txt") ||
                             file.getName().endsWith(".fsh") ||
                             file.getName().endsWith(".vsh") ||
                             file.getName().endsWith(".glsl") ||

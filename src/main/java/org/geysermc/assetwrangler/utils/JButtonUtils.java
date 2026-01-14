@@ -1,5 +1,7 @@
 package org.geysermc.assetwrangler.utils;
 
+import org.geysermc.assetwrangler.Logger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -26,10 +28,8 @@ public class JButtonUtils {
             try {
                 Desktop.getDesktop().browse(URI.create(url));
             } catch (IOException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(
-                        null, "Something went wrong when opening link!",
-                        "Error! Error!", JOptionPane.ERROR_MESSAGE
+                Logger.errorWithDialog(
+                        "Something went wrong when opening link!", ex, null
                 );
             }
         });

@@ -2,6 +2,7 @@ package org.geysermc.assetwrangler.windows;
 
 import lombok.Getter;
 import org.geysermc.assetwrangler.BuildConstants;
+import org.geysermc.assetwrangler.Logger;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.config.Config;
@@ -25,12 +26,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @Getter
-public class MappingsWindow extends JFrame implements AssetViewerWindow {
+public class MappingsWindow extends BaseWindow implements AssetViewerWindow {
     private final ActionManager actionManager;
 
     private final PreviewPanel previewPanel;
@@ -43,8 +45,7 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
     private boolean savesRequired = false;
 
     public MappingsWindow() {
-        Main.registerForFrame(this);
-
+        super();
         actionManager = new ActionManager(this);
 
         metaLoader = YamlConfigurationLoader.builder()
@@ -63,13 +64,11 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
                 mappingsMeta = newRoot.get(JsonMappingsMeta.class);
             }
         } catch (ConfigurateException e) {
-            e.printStackTrace();
             previewPanel = null;
             javaAssetPanel = null;
             bedrockAssetPanel = null;
-            JOptionPane.showMessageDialog(
-                    null, "Something went wrong while reading the mappings meta :(",
-                    "Error! Error!", JOptionPane.ERROR_MESSAGE
+            Logger.errorWithDialog(
+                    "Something went wrong while reading the mappings meta :(", e, this
             );
             return;
         }
@@ -108,17 +107,17 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
         this.setSize(layoutManager.preferredLayoutSize(this));
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-        this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         this.setMinimumSize(layoutManager.minimumLayoutSize(this));
 
+        this.removeWindowListener(getWindowListeners()[0]); // BaseWindow
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 MappingsWindow.this.offerSaveIfRequired(b -> {
                     if (b != null) {
-                        if (b) Main.saveConfig();
+                        if (b) save();
 
-                        System.exit(0);
+                        MappingsWindow.this.close(); // BaseWindow
                     }
                 });
             }
@@ -142,10 +141,8 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
                 mappingsMeta = newRoot.get(JsonMappingsMeta.class);
             }
         } catch (ConfigurateException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    null, "Something went wrong while reading the mappings meta :(",
-                    "Error! Error!", JOptionPane.ERROR_MESSAGE
+            Logger.errorWithDialog(
+                    "Something went wrong while reading the mappings meta.", e, this
             );
             return;
         }
@@ -205,14 +202,20 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
         List<String> javaAssets = javaAssetPanel.getSelectedPaths();
         List<String> bedrockAssets = bedrockAssetPanel.getSelectedPaths();
 
+        if (new HashSet<>(javaAssets).equals(new HashSet<>(bedrockAssets))) {
+            // The paths perfectly match... this could be a simple match
+            match();
+            return;
+        }
+
         if (javaAssets.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "You must select a java asset.", "Uh oh.", JOptionPane.WARNING_MESSAGE);
+            Logger.warnWithDialog("You must select a java asset.", null, this);
             return;
         } else if (bedrockAssets.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "You must select one or more bedrock assets.", "Uh oh.", JOptionPane.WARNING_MESSAGE);
+            Logger.warnWithDialog("You must select one or more bedrock assets.", null, this);
             return;
         } else if (javaAssets.size() > 1) {
-            JOptionPane.showMessageDialog(this, "You can only select one java asset.", "Uh oh.", JOptionPane.WARNING_MESSAGE);
+            Logger.warnWithDialog("You can only select one java asset.", null, this);
             return;
         }
 
@@ -319,8 +322,10 @@ public class MappingsWindow extends JFrame implements AssetViewerWindow {
             metaRoot.set(mappingsMeta);
             metaLoader.save(metaRoot);
         } catch (ConfigurateException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "An error occured while saving the metadata file of the mapping.", "Error! Error!", JOptionPane.WARNING_MESSAGE);
+            Logger.errorWithDialog(
+                    "An error occured while saving the metadata file of the mapping.",
+                    ex, this
+            );
         }
     }
 

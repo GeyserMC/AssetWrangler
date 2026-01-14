@@ -15,8 +15,4 @@ public class DialogUtils {
                 Main.ICON, null, null
         ) == JOptionPane.YES_OPTION;
     }
-
-    public static void warning(JFrame parent, String title, String message) {
-        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.WARNING_MESSAGE);
-    }
 }

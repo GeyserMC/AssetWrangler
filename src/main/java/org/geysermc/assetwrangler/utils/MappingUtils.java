@@ -1,5 +1,7 @@
 package org.geysermc.assetwrangler.utils;
 
+import org.geysermc.assetwrangler.Logger;
+
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +19,9 @@ public class MappingUtils {
         try {
             mappings.save(file);
         } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Something went wrong while saving mappings!", "Error! Error!", JOptionPane.ERROR_MESSAGE);
+            Logger.errorWithDialog(
+                    "Something went wrong while saving mappings!", e, null
+            );
         }
     }
 }

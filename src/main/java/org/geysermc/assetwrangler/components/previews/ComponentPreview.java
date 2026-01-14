@@ -9,8 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class TextPreview extends JScrollPane {
-    public TextPreview(File file) {
+public class ComponentPreview extends JScrollPane {
+    public ComponentPreview(File file) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -24,10 +24,10 @@ public class TextPreview extends JScrollPane {
             Logger.error("Error loading text file (%s)".formatted(file.toString()), e);
             val = "Error reading file.";
         }
-        JTextArea textArea = new JTextArea();
-        textArea.setEnabled(false);
-        textArea.setText(val);
-        textArea.setCaretPosition(0);
+        ComponentTextArea textArea = new ComponentTextArea();
+        textArea.appendLegacyText(val);
+        textArea.setBackground(new Color(1, 1, 1, 102));
+        textArea.setOpaque(false);
 
         panel.add(textArea, gbc);
 

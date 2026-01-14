@@ -1,5 +1,6 @@
 package org.geysermc.assetwrangler.components.previews;
 
+import com.twelvemonkeys.image.BufferedImageIcon;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.components.ClosableComponent;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
@@ -108,7 +109,7 @@ public class AnimatedTexturePreview extends JLabel implements ClosableComponent 
         Graphics2D graphics = (Graphics2D) scaledImage.getGraphics();
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         graphics.drawImage(image, xOffset, yOffset, (int) (image.getWidth() * scale), (int) (image.getHeight() * scale), null);
-        icon = new ImageIcon(scaledImage);
+        icon = new BufferedImageIcon(scaledImage);
         this.setIcon(icon);
         this.repaint();
 

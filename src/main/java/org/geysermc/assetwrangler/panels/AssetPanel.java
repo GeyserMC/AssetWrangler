@@ -6,6 +6,7 @@ import org.geysermc.assetwrangler.treemodels.AssetTreeModel;
 import org.geysermc.assetwrangler.utils.Asset;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
+import org.geysermc.assetwrangler.utils.NinesliceData;
 import org.geysermc.assetwrangler.windows.AssetViewerWindow;
 
 import javax.swing.*;
@@ -156,4 +157,6 @@ public abstract class AssetPanel extends BasePanel {
     public abstract JsonMappingsMeta.Section getMetaSection();
     public abstract boolean isAssetAnimated(String filePath);
     public abstract AnimationMeta getAnimationMeta(BufferedImage img, String filePath);
+    public abstract boolean isAssetNinesliced(String filePath);
+    public abstract NinesliceData getNineslicedMeta(BufferedImage img, String filePath);
 }

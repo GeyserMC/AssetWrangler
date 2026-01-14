@@ -87,10 +87,9 @@ public class Main {
             }
         } catch (ConfigurateException e) {
             config1 = new Config();
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    null, "The default config will be in use since an error occured when reading the default config.",
-                    "Error! Error!", JOptionPane.ERROR_MESSAGE
+            Logger.errorWithDialog(
+                    "The default config will be in use since an error occured when reading the default config.",
+                    e, null
             );
         }
         CONFIG = config1;
@@ -102,10 +101,8 @@ public class Main {
             newRoot.set(CONFIG);
             CONFIG_LOADER.save(newRoot);
         } catch (ConfigurateException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    null, "An error occured while saving the config.",
-                    "Error! Error!", JOptionPane.ERROR_MESSAGE
+            Logger.errorWithDialog(
+                    "An error occured while saving the config.", e, null
             );
         }
     }

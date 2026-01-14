@@ -1,7 +1,12 @@
 package org.geysermc.assetwrangler.components.previews;
 
+import com.twelvemonkeys.image.BufferedImageIcon;
+import org.geysermc.assetwrangler.utils.ClipboardUtils;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 public class TexturePreview extends JLabel {
@@ -37,5 +42,26 @@ public class TexturePreview extends JLabel {
         setHorizontalAlignment(SwingConstants.LEFT);
         setHorizontalTextPosition(JLabel.RIGHT);
         setVerticalTextPosition(JLabel.TOP);
+
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                JPopupMenu menu = new JPopupMenu();
+
+                JMenuItem regularItem = new JMenuItem("Copy image");
+                regularItem.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(image);
+                });
+                menu.add(regularItem);
+                JMenuItem scaledItem = new JMenuItem("Copy scaled image");
+                scaledItem.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(scaledImage);
+                });
+                menu.add(scaledItem);
+
+                menu.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
     }
 }

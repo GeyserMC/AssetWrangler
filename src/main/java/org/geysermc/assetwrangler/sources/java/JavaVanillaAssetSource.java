@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.sources.AssetSource;
 import org.geysermc.assetwrangler.utils.DialogUtils;
+import org.geysermc.assetwrangler.utils.FutureUtils;
 import org.geysermc.assetwrangler.utils.WebUtils;
 
 import javax.swing.*;
@@ -18,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.zip.ZipFile;
 
 public abstract class JavaVanillaAssetSource implements AssetSource {
@@ -27,6 +29,8 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
     private static final String RESOLVED_DATA_PATH = "data/java/%s";
     private static final String RESOLVED_TMP_DIRECTORY = "tmp/java/%s.jar";
 
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(5);
+    
     protected VersionManifest versionManifest = null;
 
     public abstract String getLatestVersionTag();
@@ -55,13 +59,19 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
                         null, "Options, options...",
                         "A new version of java assets can be downloaded! Would you like to get the new version?"
                 );
+                if (shouldDownload) {
+                    Files.writeString(storedVersion, getLatestVersionTag());
+                }
             }
         } else {
             shouldDownload = true;
             Files.writeString(storedVersion, getLatestVersionTag());
         }
 
-        if (!shouldDownload || Files.notExists(storedVersion)) return;
+        if (!shouldDownload || Files.notExists(storedVersion)) {
+            callback.run();
+            return;
+        }
 
         JDialog dialog = new JDialog(parent);
         Main.registerForFrame(dialog);
@@ -85,71 +95,87 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
 
         dialog.setVisible(true);
 
-        Thread t = new Thread(() -> {
+        textArea.setText(textArea.getText() + "\nFetching version...");
+        textArea.setCaretPosition(textArea.getDocument().getLength());
+
+        String currentVersion = Files.readString(storedVersion);
+        Path rootPath = dataDirectory.resolve(RESOLVED_DATA_PATH.formatted(currentVersion));
+        Path tmpPath = dataDirectory.resolve(RESOLVED_TMP_DIRECTORY.formatted(currentVersion));
+
+        String latestInfoURL = versionManifest.getVersions().stream().filter(version ->
+                version.getId().equals(currentVersion)
+        ).findFirst().map(Version::getUrl).orElse("");
+
+        if (latestInfoURL.isEmpty()) {
+            throw new IOException("Unable to find a valid version!");
+        }
+
+        List<CompletableFuture<?>> futures = new CopyOnWriteArrayList<>();
+
+        CompletableFuture<VersionInfo> versionInfoFuture = FutureUtils.supplyAsync(
+                () -> GSON.fromJson(WebUtils.getBody(latestInfoURL), VersionInfo.class), threadPool
+        );
+
+        CompletableFuture<Void> downloadJarFuture = FutureUtils.then(versionInfoFuture, versionInfo -> {
+            SwingUtilities.invokeLater(() -> {
+                textArea.setText(textArea.getText() + "\nDownloading client jar...");
+                textArea.setCaretPosition(textArea.getDocument().getLength());
+            });
+
+            VersionDownload clientJarInfo = versionInfo.getDownloads().get("client");
+
+            if (rootPath.getParent() != null) Files.createDirectories(rootPath.getParent());
+
+            if (Files.exists(tmpPath)) Files.delete(tmpPath);
+            Files.createDirectories(tmpPath.getParent());
+
             try {
-                SwingUtilities.invokeLater(() -> {
-                    textArea.setText(textArea.getText() + "\nFetching version...");
-                    textArea.setCaretPosition(textArea.getDocument().getLength());
-                });
-                String currentVersion = Files.readString(storedVersion);
-                Path rootPath = dataDirectory.resolve(RESOLVED_DATA_PATH.formatted(currentVersion));
-                Path tmpPath = dataDirectory.resolve(RESOLVED_TMP_DIRECTORY.formatted(currentVersion));
-
-                String latestInfoURL = "";
-                for (Version version : versionManifest.getVersions()) {
-                    if (version.getId().equals(currentVersion)) {
-                        latestInfoURL = version.getUrl();
-                        break;
-                    }
-                }
-
-                if (latestInfoURL.isEmpty()) {
-                    throw new IOException("Unable to find a valid version!");
-                }
-
-                // Get the individual version manifest
-                VersionInfo versionInfo = GSON.fromJson(WebUtils.getBody(latestInfoURL), VersionInfo.class);
-
-                // Get the client jar for use when downloading the en_us locale
-                VersionDownload clientJarInfo = versionInfo.getDownloads().get("client");
-
-                JsonObject assets = JsonParser.parseString(WebUtils.getBody(versionInfo.getAssetIndex().getUrl())).getAsJsonObject().get("objects").getAsJsonObject();
-
-                if (rootPath.getParent() != null) Files.createDirectories(rootPath.getParent());
-
-                if (Files.exists(tmpPath)) Files.delete(tmpPath);
-                Files.createDirectories(tmpPath.getParent());
-                SwingUtilities.invokeLater(() -> {
-                    textArea.setText(textArea.getText() + "\nDownloading client jar...");
-                    textArea.setCaretPosition(textArea.getDocument().getLength());
-                });
                 Files.copy(new URI(clientJarInfo.url).toURL().openStream(), tmpPath);
+            } catch (URISyntaxException e) {
+                throw new IOException(e);
+            }
+        });
 
-                ZipFile file = new ZipFile(tmpPath.toFile());
+        futures.add(downloadJarFuture);
 
-                SwingUtilities.invokeLater(() -> {
-                    textArea.setText(textArea.getText() + "\nExtracting client jar assets...");
-                    textArea.setCaretPosition(textArea.getDocument().getLength());
-                });
-                file.stream().filter(entry -> !entry.isDirectory() && entry.getName().startsWith("assets"))
-                        .forEach(entry -> {
-                            try {
-                                Path destPath = rootPath.resolve(entry.getName());
-                                Files.createDirectories(destPath.getParent());
-                                if (Files.exists(destPath)) Files.delete(destPath);
-                                Files.copy(file.getInputStream(entry), destPath);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-                file.close();
+        CompletableFuture<JsonObject> assetsFuture = FutureUtils.then(versionInfoFuture, versionInfo -> {
+            return JsonParser.parseString(WebUtils.getBody(
+                    versionInfo.getAssetIndex().getUrl()
+            )).getAsJsonObject().get("objects").getAsJsonObject();
+        });
 
-                SwingUtilities.invokeLater(() -> {
-                    textArea.setText(textArea.getText() + "\nDownloading extra assets...");
-                    textArea.setCaretPosition(textArea.getDocument().getLength());
-                });
+        futures.add(assetsFuture);
 
-                for (Map.Entry<String, JsonElement> entry : assets.entrySet()) {
+        CompletableFuture<Void> zipFuture = FutureUtils.then(downloadJarFuture, v -> {
+            ZipFile file = new ZipFile(tmpPath.toFile());
+            SwingUtilities.invokeLater(() -> {
+                textArea.setText(textArea.getText() + "\nExtracting client jar assets...");
+                textArea.setCaretPosition(textArea.getDocument().getLength());
+            });
+            file.stream().filter(entry -> !entry.isDirectory() && entry.getName().startsWith("assets"))
+                    .forEach(entry -> {
+                        try {
+                            Path destPath = rootPath.resolve(entry.getName());
+                            Files.createDirectories(destPath.getParent());
+                            if (Files.exists(destPath)) Files.delete(destPath);
+                            Files.copy(file.getInputStream(entry), destPath);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+            file.close();
+        });
+
+        futures.add(zipFuture);
+
+        CompletableFuture<Void> assetsDownloadFuture = FutureUtils.then(assetsFuture, assets -> {
+            SwingUtilities.invokeLater(() -> {
+                textArea.setText(textArea.getText() + "\nDownloading extra assets...");
+                textArea.setCaretPosition(textArea.getDocument().getLength());
+            });
+
+            for (Map.Entry<String, JsonElement> entry : assets.entrySet()) {
+                CompletableFuture<Void> assetFuture = FutureUtils.run(() -> {
                     Asset asset = GSON.fromJson(entry.getValue(), Asset.class);
 
                     String bytes = asset.hash.substring(0, 2);
@@ -160,23 +186,29 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
 
                     if (Files.exists(destPath)) Files.delete(destPath); // We prefer these over existing ones
 
-                    Files.copy(
-                            new URI("https://resources.download.minecraft.net/%s/%s"
-                                    .formatted(bytes, asset.hash)).toURL().openStream(), destPath
-                    );
-                }
+                    try {
+                        Files.copy(
+                                new URI("https://resources.download.minecraft.net/%s/%s"
+                                        .formatted(bytes, asset.hash)).toURL().openStream(), destPath
+                        );
+                    } catch (URISyntaxException e) {
+                        throw new IOException(e);
+                    }
+                }, threadPool);
 
-                SwingUtilities.invokeLater(() -> {
-                    dialog.setVisible(false);
-                    dialog.dispose();
-                    callback.run();
-                });
-            } catch (IOException | URISyntaxException e) {
-                throw new RuntimeException(e);
+                futures.add(assetFuture);
             }
         });
 
-        t.start();
+        futures.add(assetsDownloadFuture);
+
+        FutureUtils.onComplete(() -> {
+            SwingUtilities.invokeLater(() -> {
+                dialog.setVisible(false);
+                dialog.dispose();
+                callback.run();
+            });
+        }, futures);
     }
 
     private void fetchVersionManifestIfRequired() {

@@ -14,7 +14,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ViewerWindow extends JFrame implements AssetViewerWindow {
+public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
     @Getter
     private final ActionManager actionManager;
 
@@ -22,8 +22,7 @@ public class ViewerWindow extends JFrame implements AssetViewerWindow {
     private final PreviewPanel previewPanel;
 
     public ViewerWindow(boolean isJava) {
-        Main.registerForFrame(this);
-
+        super();
         actionManager = new ActionManager(this);
 
         this.setLayout(new Layout());

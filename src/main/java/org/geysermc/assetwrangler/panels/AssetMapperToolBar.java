@@ -1,11 +1,13 @@
 package org.geysermc.assetwrangler.panels;
 
+import org.geysermc.assetwrangler.Logger;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.keybinds.Keybind;
 import org.geysermc.assetwrangler.windows.AssetDirectorySelectorWindow;
 import org.geysermc.assetwrangler.windows.MappingsWindow;
 import org.geysermc.assetwrangler.config.Config;
 import org.geysermc.assetwrangler.windows.InfoWindow;
+import org.geysermc.assetwrangler.windows.SourceSelectWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,8 +38,9 @@ public class AssetMapperToolBar extends JMenuBar {
                             try {
                                 Files.writeString(Main.mappingFile, "{}");
                             } catch (IOException ex) {
-                                ex.printStackTrace();
-                                JOptionPane.showMessageDialog(main, "Unable to create mapping file!", "Error! Error!", JOptionPane.ERROR_MESSAGE);
+                                Logger.errorWithDialog(
+                                        "Unable to create mapping file!", ex, main
+                                );
                             }
 
                             main.reload();
@@ -76,14 +79,14 @@ public class AssetMapperToolBar extends JMenuBar {
                     if (main.getActionManager().canUndo()) {
                         main.getActionManager().undo();
                     } else {
-                        JOptionPane.showMessageDialog(main, "Nothing to undo!", "Uh oh", JOptionPane.WARNING_MESSAGE);
+                        Logger.warnWithDialog("Nothing to undo!", null, main);
                     }
                 }, Keybind.ctrl(KeyEvent.VK_Z)),
                 TooltipItem.of("Redo", () -> {
                     if (main.getActionManager().canRedo()) {
                         main.getActionManager().redo();
                     } else {
-                        JOptionPane.showMessageDialog(main, "Nothing to redo!", "Uh oh", JOptionPane.WARNING_MESSAGE);
+                        Logger.warnWithDialog("Nothing to redo!", null, main);
                     }
                 }, Keybind.ctrl(KeyEvent.VK_Y))
         );

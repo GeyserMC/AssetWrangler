@@ -1,5 +1,7 @@
 package org.geysermc.assetwrangler.components.previews;
 
+import org.geysermc.assetwrangler.Logger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -29,7 +31,7 @@ public class ZipPreview extends JScrollPane {
             textArea.append(builder);
             zipFile.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Error reading zip file (%s)".formatted(file.toString()), e);
             textArea.setText("Error reading file.");
         }
         panel.add(textArea, gbc);
