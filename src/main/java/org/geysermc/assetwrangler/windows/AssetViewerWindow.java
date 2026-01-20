@@ -4,6 +4,7 @@ import org.geysermc.assetwrangler.Logger;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.sources.AssetSource;
+import org.geysermc.assetwrangler.utils.JsonMappings;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 
 import javax.swing.*;
@@ -11,11 +12,15 @@ import java.awt.*;
 import java.io.IOException;
 
 public interface AssetViewerWindow {
+    JFrame getFrame();
+
     void setJavaPreviewComponent(JComponent component);
     void setBedrockPreviewComponent(JComponent component);
 
     boolean isJavaMapped(String path);
     boolean isBedrockMapped(String path);
+
+    JsonMappings getJsonMappings();
 
     JsonMappingsMeta.Section getJavaMeta();
     JsonMappingsMeta.Section getBedrockMeta();
@@ -25,6 +30,8 @@ public interface AssetViewerWindow {
     boolean isSavesRequired();
     void markSave();
     void unmarkSave();
+
+    void refreshView();
 
     default void checkAssetSource(AssetSource assetSource, Runnable callback) {
         try {

@@ -17,7 +17,7 @@ public class NoPlaySoundPreview extends JPanel {
                 throw new RuntimeException(ex);
             } catch (UnsupportedOperationException ignored) {}
         });
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             button.setEnabled(false);
             button.setToolTipText("Unable to open files on your Operating System.");
         }

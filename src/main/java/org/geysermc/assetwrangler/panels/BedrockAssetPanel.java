@@ -20,8 +20,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BedrockAssetPanel extends AssetPanel {
     private final Map<String, AnimationMeta> ANIMATED_TEXTURES = new HashMap<>();
@@ -58,6 +57,30 @@ public class BedrockAssetPanel extends AssetPanel {
     @Override
     public boolean isMapped(String path) {
         return main.isBedrockMapped(path);
+    }
+
+    @Override
+    public void unmap(String path) {
+        String javaPath = main.getJsonMappings().getJavaOrigin(path);
+        List<String> bedrockOutputs = main.getJsonMappings().map(javaPath);
+
+        main.getActionManager().doAction(() -> {
+            main.getJsonMappings().removeBedrock(path);
+            main.refreshView();
+        }, () -> {
+            main.getJsonMappings().map(javaPath, bedrockOutputs);
+            main.refreshView();
+        }, true);
+    }
+
+    @Override
+    public boolean canSingleMap() {
+        return false;
+    }
+
+    @Override
+    public List<String> lookupMapping(String key) {
+        return Collections.singletonList(main.getJsonMappings().getJavaOrigin(key));
     }
 
     @Override

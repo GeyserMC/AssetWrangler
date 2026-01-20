@@ -7,11 +7,11 @@ import org.geysermc.assetwrangler.actions.ActionManager;
 import org.geysermc.assetwrangler.panels.*;
 import org.geysermc.assetwrangler.sources.AssetSource;
 import org.geysermc.assetwrangler.sources.AssetSources;
+import org.geysermc.assetwrangler.utils.JsonMappings;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
@@ -63,6 +63,11 @@ public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
     }
 
     @Override
+    public JFrame getFrame() {
+        return this;
+    }
+
+    @Override
     public void setJavaPreviewComponent(JComponent component) {
         this.previewPanel.setJavaPreviewComponent(component);
     }
@@ -80,6 +85,11 @@ public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
     @Override
     public boolean isBedrockMapped(String path) {
         return false;
+    }
+
+    @Override
+    public JsonMappings getJsonMappings() {
+        return new JsonMappings();
     }
 
     @Override
@@ -105,6 +115,11 @@ public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
     @Override
     public void unmarkSave() {
         // No-op, saves shouldn't happen on a viewer window
+    }
+
+    @Override
+    public void refreshView() {
+        // No-op, refreshes would do nothing on a viewer window
     }
 
     private static class Layout implements LayoutManager {

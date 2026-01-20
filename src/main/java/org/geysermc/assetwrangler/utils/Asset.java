@@ -13,10 +13,11 @@ import java.util.*;
 @Getter
 public class Asset {
     private static final Map<String, String> REDIRECTS = Map.of(
-            "textures/blocks", "textures/block",
-            "textures/items", "textures/item",
-            "textures/ui", "textures/gui"
+            "textures/blocks/", "textures/block/",
+            "textures/items/", "textures/item/",
+            "textures/ui/", "textures/gui/"
     );
+    private static final Map<String, String> INVERT_REDIRECTS = MapUtils.invertMap(REDIRECTS);
     private static final List<String> FORBIDDEN_FILE_NAMES = List.of(
             "_list.json", "_all.json", // TODO remove these 2 when I add proper java client asset downloading
             "desktop.ini", "__brarchive"
@@ -40,7 +41,20 @@ public class Asset {
     }
 
     public Asset resolve(String path) {
+        return resolve(path, false);
+    }
+
+    public Asset resolve(String path, boolean handleRedirects) {
         if (path.isBlank()) return this;
+
+        if (handleRedirects) {
+            for (Map.Entry<String, String> redirect : INVERT_REDIRECTS.entrySet()) {
+                if (path.startsWith(redirect.getKey())) {
+                    path = redirect.getValue() + path.substring(redirect.getKey().length());
+                }
+            }
+        }
+
         Asset currentAsset = this;
         List<String> paths = Arrays.stream(path.split("/")).toList();
         for (String childPath : paths) {
@@ -51,9 +65,21 @@ public class Asset {
     }
 
     public Asset getChild(String path) {
-        List<Asset> assets = children.stream().filter(a -> a.name.equals(path)).toList();
+        List<Asset> assets = children.stream()
+                .filter(
+                        a -> {
+                            if (a.name.equals(path)) return true;
+
+                            String name = a.name;
+                            int dotIndex = name.indexOf('.');
+                            if (dotIndex != -1) name = name.substring(0, dotIndex);
+
+                            return name.equals(path);
+                        }
+                )
+                .toList();
         if (assets.isEmpty()) return null;
-        return assets.getFirst();
+        return assets.getLast();
     }
 
     public void combine(Asset asset) {
@@ -78,16 +104,21 @@ public class Asset {
     public boolean viewable(AssetPanel panel) {
         if (!panel.isForMapping()) return true;
 
-        if (!Main.CONFIG.showBedrockMetadataFiles()) {
+        if (directory) {
+            boolean visible = false;
+            for (Asset child : children) {
+                visible = visible || child.viewable(panel);
+            }
+            return visible;
+        }
+
+        if (!Main.CONFIG.showTextureMetadata()) {
             if (
                     name.endsWith("_mers.tga") ||
                             name.endsWith("_mers.png") ||
-                            name.endsWith(".texture_set.json")
+                            name.endsWith(".texture_set.json") ||
+                            name.endsWith(".mcmeta")
             ) return false;
-        }
-
-        if (!Main.CONFIG.showJavaMetadataFiles()) {
-            if (name.endsWith(".mcmeta")) return false;
         }
 
         String relativePath = this.relativePath;

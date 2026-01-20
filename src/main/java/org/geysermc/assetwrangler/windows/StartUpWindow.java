@@ -77,7 +77,7 @@ public class StartUpWindow extends BaseWindow {
         });
         this.add(javaAssets);
         JButton bedrockAssets = new JButton("View Bedrock Assets");
-        javaAssets.setToolTipText("View the Bedrock Assets from your selected source.");
+        bedrockAssets.setToolTipText("View the Bedrock Assets from your selected source.");
         bedrockAssets.addActionListener(e -> {
             StartUpWindow.this.setVisible(false);
             StartUpWindow.this.invalidate();
@@ -88,7 +88,7 @@ public class StartUpWindow extends BaseWindow {
         this.add(bedrockAssets);
 
         JButton setSources = new JButton("Set Source Locations");
-        javaAssets.setToolTipText("Set the sources of your assets.");
+        setSources.setToolTipText("Set the sources of your assets.");
         setSources.addActionListener(e -> {
             StartUpWindow.this.setVisible(false);
             StartUpWindow.this.invalidate();

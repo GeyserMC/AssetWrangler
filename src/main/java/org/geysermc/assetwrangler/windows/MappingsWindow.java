@@ -24,7 +24,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -162,6 +161,11 @@ public class MappingsWindow extends BaseWindow implements AssetViewerWindow {
     }
 
     @Override
+    public JsonMappings getJsonMappings() {
+        return mappings;
+    }
+
+    @Override
     public JsonMappingsMeta.Section getJavaMeta() {
         return mappingsMeta.getJava();
     }
@@ -219,14 +223,16 @@ public class MappingsWindow extends BaseWindow implements AssetViewerWindow {
             return;
         }
 
+        String javaPath = javaAssets.getFirst();
+
         actionManager.doAction(() -> {
             mappings.map(
-                    javaAssets.getFirst(),
+                    javaPath,
                     bedrockAssets
             );
             refreshView();
         }, () -> {
-            mappings.remove(javaAssets.getFirst());
+            mappings.removeJava(javaPath);
             refreshView();
         }, true);
 
@@ -339,6 +345,11 @@ public class MappingsWindow extends BaseWindow implements AssetViewerWindow {
         if (chooser.getFile() == null) return;
 
         this.save(Path.of(chooser.getDirectory(), chooser.getFile()));
+    }
+
+    @Override
+    public JFrame getFrame() {
+        return this;
     }
 
     public void setJavaPreviewComponent(JComponent component) {

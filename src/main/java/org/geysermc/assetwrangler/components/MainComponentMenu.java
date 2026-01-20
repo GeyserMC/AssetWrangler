@@ -2,11 +2,14 @@ package org.geysermc.assetwrangler.components;
 
 import org.geysermc.assetwrangler.panels.AssetPanel;
 import org.geysermc.assetwrangler.treemodels.AssetTreeModel;
+import org.geysermc.assetwrangler.utils.DialogUtils;
 import org.geysermc.assetwrangler.utils.JsonMappingsMeta;
 import org.geysermc.assetwrangler.windows.MappingsWindow;
 
 import javax.swing.*;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class MainComponentMenu extends JPopupMenu {
@@ -23,6 +26,32 @@ public class MainComponentMenu extends JPopupMenu {
         int dotIndex = relativePath.indexOf('.');
         if (dotIndex != -1) relativePath = relativePath.substring(0, dotIndex);
 
+        if (panel.isMapped(relativePath)) {
+            addNoActionComponent(String.join(", ", panel.lookupMapping(relativePath)));
+            addRawComponent(
+                    relativePath,
+                    panel::unmap,
+                    "Remove mapping"
+            );
+        } else if (panel.canSingleMap()) {
+            addRawComponent(
+                    relativePath,
+                    path -> {
+                        CompletableFuture<String> inputValue = DialogUtils.getString(
+                                panel.getMain().getFrame(), "Path please.",
+                                "Input custom mapping path:"
+                        );
+                        String value = inputValue.join();
+                        if (value == null) return;
+
+                        panel.getMain().getActionManager().doAction(() -> {
+                            panel.getMain().getJsonMappings().map(path, Collections.singletonList(value));
+                        }, () -> {
+                            panel.unmap(path);
+                        }, true);
+                    }, "Specify Custom Mapping"
+            );
+        }
         addComponent(
                 relativePath,
                 mappingsMeta.getMatchingPaths(),
@@ -44,6 +73,21 @@ public class MainComponentMenu extends JPopupMenu {
                 mappingsMeta::untransformPath,
                 "transformed"
         );
+    }
+
+    public void addNoActionComponent(String name) {
+        JMenuItem item = new JMenuItem(name);
+
+        this.add(item);
+    }
+
+    public void addRawComponent(String relativePath, Consumer<String> action, String name) {
+        JMenuItem item = new JMenuItem(name);
+
+        item.addActionListener(e -> {
+            action.accept(relativePath);
+        });
+        this.add(item);
     }
 
     public void addComponent(String relativePath, List<String> currentPaths, Consumer<String> set, Consumer<String> unset, String name) {

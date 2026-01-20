@@ -15,8 +15,8 @@ public class Config {
     private boolean showIgnoredEntries = false;
     private boolean showMatchingEntries = false;
     private boolean showTransformedEntries = false;
-    private boolean showJavaMetadataFiles = false;
-    private boolean showBedrockMetadataFiles = false;
+
+    private boolean showTextureMetadata = false;
     private boolean disableAnimationInterpolation = false;
 
     private String javaAssetSourceKey = "";

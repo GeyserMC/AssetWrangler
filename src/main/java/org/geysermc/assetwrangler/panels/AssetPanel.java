@@ -153,6 +153,9 @@ public abstract class AssetPanel extends BasePanel {
     }
 
     public abstract boolean isMapped(String path);
+    public abstract void unmap(String path);
+    public abstract boolean canSingleMap();
+    public abstract List<String> lookupMapping(String key);
     public abstract void setPreviewComponent(AssetViewerWindow main, JComponent component);
     public abstract JsonMappingsMeta.Section getMetaSection();
     public abstract boolean isAssetAnimated(String filePath);

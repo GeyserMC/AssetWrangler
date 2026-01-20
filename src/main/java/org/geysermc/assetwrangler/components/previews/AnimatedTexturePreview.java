@@ -4,9 +4,15 @@ import com.twelvemonkeys.image.BufferedImageIcon;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.components.ClosableComponent;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
+import org.geysermc.assetwrangler.utils.BetterTimer;
+import org.geysermc.assetwrangler.utils.ClipboardUtils;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +21,10 @@ public class AnimatedTexturePreview extends JLabel implements ClosableComponent 
     private final List<ImagePart> imageParts;
     private final boolean interpolate;
 
-    private final Thread timer;
+    private final BetterTimer timer;
 
+    private BufferedImage renderedImage;
+    private BufferedImage scaledRenderedImage;
     private double progressCurrently = 0;
     private int currentIndex = 0;
     private int nextIndex = 1;
@@ -30,7 +38,7 @@ public class AnimatedTexturePreview extends JLabel implements ClosableComponent 
 
         for (int i = 0; i < animationMeta.getFrames().size(); i++) {
             AnimationMeta.Frame frame = animationMeta.getFrames().get(i);
-            imageParts.add(new ImagePart(img.getSubimage(0, i * animationMeta.getChunkHeight(), animationMeta.getWidth(), animationMeta.getHeight()), frame.getTime()));
+            imageParts.add(new ImagePart(img.getSubimage(0, frame.getIndex() * animationMeta.getChunkHeight(), animationMeta.getWidth(), animationMeta.getHeight()), frame.getTime()));
         }
 
         this.imageParts = imageParts;
@@ -45,26 +53,53 @@ public class AnimatedTexturePreview extends JLabel implements ClosableComponent 
         this.setText(label);
         this.calculateIcon();
 
-        timer = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    return;
-                }
+        timer = new BetterTimer(this::calculateIcon);
 
-                SwingUtilities.invokeLater(this::calculateIcon);
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+
+                JPopupMenu menu = new JPopupMenu();
+
+                JMenuItem regularItem = new JMenuItem("Copy image");
+                regularItem.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(renderedImage);
+                });
+                menu.add(regularItem);
+                JMenuItem scaledItem = new JMenuItem("Copy scaled image");
+                scaledItem.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(scaledRenderedImage);
+                });
+                menu.add(scaledItem);
+
+                menu.addPopupMenuListener(new PopupMenuListener() {
+                    @Override
+                    public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                        timer.setPaused(true);
+                    }
+
+                    @Override
+                    public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                        timer.setPaused(false);
+                    }
+
+                    @Override
+                    public void popupMenuCanceled(PopupMenuEvent e) {
+                        timer.setPaused(false);
+                    }
+                });
+
+                menu.show(e.getComponent(), e.getX(), e.getY());
             }
         });
-
-        timer.start();
     }
 
     public void close() {
-        timer.interrupt();
+        timer.close();
     }
 
-    public void calculateIcon() {
+    private void calculateIcon() {
         Icon icon;
         BufferedImage image;
         if (interpolate && !Main.CONFIG.disableAnimationInterpolation()) {
@@ -112,6 +147,9 @@ public class AnimatedTexturePreview extends JLabel implements ClosableComponent 
         icon = new BufferedImageIcon(scaledImage);
         this.setIcon(icon);
         this.repaint();
+
+        this.renderedImage = image;
+        this.scaledRenderedImage = scaledImage;
 
         progressCurrently += 0.1;
 

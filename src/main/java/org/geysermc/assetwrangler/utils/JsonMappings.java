@@ -58,12 +58,53 @@ public class JsonMappings {
 
     private final Map<String, List<String>> mappings;
 
+    public JsonMappings() {
+        this.mappings = new HashMap<>();
+    }
+
     private JsonMappings(Map<String, List<String>> mappings) {
         this.mappings = new HashMap<>(mappings);
     }
 
-    public void remove(String javaInput) {
-        mappings.remove(javaInput);
+    public List<String> presentJavaPaths() {
+        return this.mappings.keySet().stream().toList();
+    }
+
+    public List<String> presentBedrockPaths() {
+        List<String> paths = new ArrayList<>();
+        for (List<String> morePaths : this.mappings.values()) {
+            paths.addAll(morePaths);
+        }
+        return Collections.unmodifiableList(paths);
+    }
+
+    public List<String> removeJava(String javaInput) {
+        return mappings.remove(javaInput);
+    }
+
+    public String removeBedrock(String bedrockInput) {
+        for (Map.Entry<String, List<String>> entry : mappings.entrySet()) {
+            if (entry.getValue().contains(bedrockInput)) {
+                mappings.remove(entry.getKey());
+                return entry.getKey();
+            }
+        }
+
+        return "";
+    }
+
+    public List<String> map(String javaPath) {
+        return mappings.get(javaPath);
+    }
+
+    public String getJavaOrigin(String bedrockPath) {
+        for (Map.Entry<String, List<String>> entry : mappings.entrySet()) {
+            if (entry.getValue().contains(bedrockPath)) {
+                return entry.getKey();
+            }
+        }
+
+        return "";
     }
 
     public void map(String javaInput, List<String> bedrockOutputs) {

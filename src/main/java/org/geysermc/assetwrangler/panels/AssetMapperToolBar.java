@@ -3,11 +3,8 @@ package org.geysermc.assetwrangler.panels;
 import org.geysermc.assetwrangler.Logger;
 import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.keybinds.Keybind;
-import org.geysermc.assetwrangler.windows.AssetDirectorySelectorWindow;
-import org.geysermc.assetwrangler.windows.MappingsWindow;
+import org.geysermc.assetwrangler.windows.*;
 import org.geysermc.assetwrangler.config.Config;
-import org.geysermc.assetwrangler.windows.InfoWindow;
-import org.geysermc.assetwrangler.windows.SourceSelectWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -108,10 +105,7 @@ public class AssetMapperToolBar extends JMenuBar {
                 TooltipItem.optionToggle("Show Transformed Entries", config::showTransformedEntries, config::showTransformedEntries, (item) -> {
                     main.refreshView();
                 }),
-                TooltipItem.optionToggle("Show Java Metadata Files", config::showJavaMetadataFiles, config::showJavaMetadataFiles, (item) -> {
-                    main.refreshView();
-                }),
-                TooltipItem.optionToggle("Show Bedrock Metadata Files", config::showBedrockMetadataFiles, config::showBedrockMetadataFiles, (item) -> {
+                TooltipItem.optionToggle("Show Texture Metadata Files", config::showTextureMetadata, config::showTextureMetadata, (item) -> {
                     main.refreshView();
                 }),
                 TooltipItem.optionToggle("Disable Animation Interpolation", config::disableAnimationInterpolation, config::disableAnimationInterpolation)
@@ -123,10 +117,10 @@ public class AssetMapperToolBar extends JMenuBar {
                 }),
                 TooltipItem.of("Set Bedrock Relative Path", () -> {
                     new AssetDirectorySelectorWindow(main.getBedrockAssetPanel());
+                }),
+                TooltipItem.of("View Missing Files", () -> {
+                    new MissingPathsViewerWindow(main);
                 })
-//                TooltipItem.of("Set Hidden File Names", () -> {
-//
-//                })
         );
         createPopupMenu(
                 "Info",

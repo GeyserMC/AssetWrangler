@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 public class JavaAssetPanel extends AssetPanel {
     public JavaAssetPanel(AssetViewerWindow main, AssetSource assetSource, boolean isForMapping) {
@@ -26,6 +27,29 @@ public class JavaAssetPanel extends AssetPanel {
     @Override
     public boolean isMapped(String path) {
         return main.isJavaMapped(path);
+    }
+
+    @Override
+    public void unmap(String path) {
+        List<String> bedrockOutputs = main.getJsonMappings().map(path);
+
+        main.getActionManager().doAction(() -> {
+            main.getJsonMappings().removeJava(path);
+            main.refreshView();
+        }, () -> {
+            main.getJsonMappings().map(path, bedrockOutputs);
+            main.refreshView();
+        }, true);
+    }
+
+    @Override
+    public boolean canSingleMap() {
+        return true;
+    }
+
+    @Override
+    public List<String> lookupMapping(String key) {
+        return main.getJsonMappings().map(key);
     }
 
     @Override

@@ -15,6 +15,8 @@ public class AssetDirectorySelectorWindow extends BaseWindow {
     public AssetDirectorySelectorWindow(AssetPanel panel) {
         super();
         this.setSize(500, 500);
+        this.setResizable(false);
+
         this.setLayout(new LayoutManager() {
             public void addLayoutComponent(String name, Component comp) {}
             public void removeLayoutComponent(Component comp) {}
@@ -56,7 +58,6 @@ public class AssetDirectorySelectorWindow extends BaseWindow {
 
         JButton done = new JButton("Done");
         done.addActionListener(e -> {
-            this.dispose();
             String oldPath = panel.getMetaSection().getRelativePath();
             String newPath = selectedPath;
 
@@ -67,10 +68,17 @@ public class AssetDirectorySelectorWindow extends BaseWindow {
                 panel.getMetaSection().setRelativePath(oldPath);
                 panel.redraw();
             }, true);
+
+            AssetDirectorySelectorWindow.this.close();
         });
         this.add(done);
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+    }
+
+    @Override
+    public void close() {
+        this.dispose();
     }
 }

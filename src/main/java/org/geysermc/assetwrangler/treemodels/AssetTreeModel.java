@@ -54,8 +54,6 @@ public class AssetTreeModel implements TreeModel {
                 .filter(a -> a.viewable(panel))
                 .toList();
 
-        if (asset.isDirectory() && visibleChildren.isEmpty()) return null;
-
         String location = panel.getMetaSection().getRelativePath().isBlank() ||
                 panel.getMetaSection().getRelativePath().equals(asset.getRelativePath())
                 ? asset.getRelativePath() :
@@ -162,13 +160,17 @@ public class AssetTreeModel implements TreeModel {
             int dotIndex = relativePath.indexOf('.');
             if (dotIndex != -1) relativePath = relativePath.substring(0, dotIndex);
 
+            String unmappedRelativePath = this.unmappedRelativePath;
+            dotIndex = unmappedRelativePath.indexOf('.');
+            if (dotIndex != -1) unmappedRelativePath = unmappedRelativePath.substring(0, dotIndex);
+
             if (panel.isMapped(relativePath)) {
                 c = Color.GREEN;
-            } else if (panel.getMetaSection().getMatchingPaths().contains(relativePath)) {
+            } else if (panel.getMetaSection().getMatchingPaths().contains(unmappedRelativePath)) {
                 c = Color.MAGENTA;
-            } else if (panel.getMetaSection().getIgnoredPaths().contains(relativePath)) {
+            } else if (panel.getMetaSection().getIgnoredPaths().contains(unmappedRelativePath)) {
                 c = Color.RED;
-            } else if (panel.getMetaSection().getTransformedPaths().contains(relativePath)) {
+            } else if (panel.getMetaSection().getTransformedPaths().contains(unmappedRelativePath)) {
                 c = Color.CYAN;
             }
 
