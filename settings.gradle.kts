@@ -1,1 +1,1 @@
-rootProject.name = "AssetMapper"
+rootProject.name = "AssetWrangler"
