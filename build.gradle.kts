@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     `java-library`
     application
@@ -48,18 +50,33 @@ tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     archiveFileName.set("AssetWrangler.jar")
 }
 
-tasks.processResources {
-    doFirst {
-        val resourcesDir = sourceSets.main.get().output.resourcesDir
-        resourcesDir?.mkdirs()
-        val props = mapOf(
-            "version" to project.version,
-            "name" to "AssetWrangler",
-            "authors" to "Auri and the GeyserMC Team"
-        )
-        val propProps = props.entries.joinToString(separator = "\n") { "project.${it.key}=${it.value}" }
-        File(resourcesDir, "build.properties").writeText(propProps) // This must always be on an odd line, or the file is not written in time.
+tasks.register("generateBuildProperties") {
+    val outputFile =
+        file("${project.layout.buildDirectory.get()}/resources/main/build.properties")
+    val properties = mapOf(
+        "project.version" to project.version.toString(),
+        "project.name" to "AssetWrangler",
+        "project.authors" to "Auri and the GeyserMC Team"
+    )
+
+    inputs.properties(properties)
+    outputs.file(outputFile)
+
+    doLast {
+        val props = Properties()
+        properties.forEach { (key, value) ->
+            props.setProperty(key, value)
+        }
+
+        outputFile.parentFile.mkdirs()
+        outputFile.outputStream().use { stream ->
+            props.store(stream, "Auto-generated file, do not edit.")
+        }
     }
+}
+
+tasks.processResources {
+    dependsOn("generateBuildProperties")
 }
 
 tasks.compileJava {

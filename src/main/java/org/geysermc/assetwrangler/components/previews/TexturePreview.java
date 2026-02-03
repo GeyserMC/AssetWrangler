@@ -1,7 +1,9 @@
 package org.geysermc.assetwrangler.components.previews;
 
 import com.twelvemonkeys.image.BufferedImageIcon;
+import org.geysermc.assetwrangler.Main;
 import org.geysermc.assetwrangler.utils.ClipboardUtils;
+import org.geysermc.assetwrangler.utils.ImageUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,34 +13,22 @@ import java.awt.image.BufferedImage;
 
 public class TexturePreview extends JLabel {
     public TexturePreview(BufferedImage image, String relativePath) {
-        StringBuilder label = new StringBuilder("<html>");
-        label.append("Path: ");
-        label.append(relativePath);
-        float scaleX = 256f / image.getWidth();
-        float scaleY = 256f / image.getHeight();
+        String label = "<html>Path: " + relativePath +
+                "<br/>Resolution: " + image.getWidth() + "x" + image.getHeight() +
+                "</html>";
 
-        float scale;
-        int xOffset = 0, yOffset = 0;
-        if (scaleX > scaleY) {
-            scale = scaleY;
-            xOffset = (256 - image.getWidth()) / 2;
-        } else if (scaleX < scaleY) {
-            scale = scaleX;
-            yOffset = (256 - image.getHeight()) / 2;
-        } else {
-            scale = scaleX;
-        }
+        setText(label);
 
-        label.append("<br/>Resolution: %dx%d".formatted(image.getWidth(), image.getHeight()));
+        BufferedImage squareImage = ImageUtil.squareImage(Main.CONFIG.addCheckeredBackground() ? ImageUtil.checkerBackgroundImage(image) : image);
+        float scale = 256f / squareImage.getWidth();
+
         BufferedImage scaledImage = new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = (Graphics2D) scaledImage.getGraphics();
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        graphics.drawImage(image, xOffset, yOffset, (int) (image.getWidth() * scale), (int) (image.getHeight() * scale), null);
-        Icon icon = new ImageIcon(scaledImage);
-        label.append("</html>");
+        graphics.drawImage(squareImage, 0, 0, (int) (squareImage.getWidth() * scale), (int) (squareImage.getHeight() * scale), null);
 
-        setText(label.toString());
-        setIcon(icon);
+        setIcon(new BufferedImageIcon(scaledImage));
+
         setHorizontalAlignment(SwingConstants.LEFT);
         setHorizontalTextPosition(JLabel.RIGHT);
         setVerticalTextPosition(JLabel.TOP);
@@ -49,16 +39,29 @@ public class TexturePreview extends JLabel {
                 if (!e.isPopupTrigger()) return;
                 JPopupMenu menu = new JPopupMenu();
 
-                JMenuItem regularItem = new JMenuItem("Copy image");
+                JMenuItem pathItem = new JMenuItem("Copy relative path");
+                pathItem.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(relativePath);
+                });
+                menu.add(pathItem);
+
+                JMenuItem regularItem = new JMenuItem("Copy x1 scaled image");
                 regularItem.addActionListener(ev -> {
                     ClipboardUtils.copyToClipboard(image);
                 });
                 menu.add(regularItem);
-                JMenuItem scaledItem = new JMenuItem("Copy scaled image");
-                scaledItem.addActionListener(ev -> {
-                    ClipboardUtils.copyToClipboard(scaledImage);
+
+                JMenuItem scaled5Item = new JMenuItem("Copy x5 scaled image");
+                scaled5Item.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(ImageUtil.scale(image, 5));
                 });
-                menu.add(scaledItem);
+                menu.add(scaled5Item);
+
+                JMenuItem scaled10Item = new JMenuItem("Copy x10 scaled image");
+                scaled10Item.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(ImageUtil.scale(image, 10));
+                });
+                menu.add(scaled10Item);
 
                 menu.show(e.getComponent(), e.getX(), e.getY());
             }

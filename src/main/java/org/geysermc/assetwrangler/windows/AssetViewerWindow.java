@@ -31,6 +31,8 @@ public interface AssetViewerWindow {
     void markSave();
     void unmarkSave();
 
+    boolean isForMapping();
+
     void refreshView();
 
     default void checkAssetSource(AssetSource assetSource, Runnable callback) {

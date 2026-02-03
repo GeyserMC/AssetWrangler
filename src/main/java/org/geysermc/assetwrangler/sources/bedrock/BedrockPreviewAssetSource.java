@@ -1,11 +1,9 @@
 package org.geysermc.assetwrangler.sources.bedrock;
 
-import java.nio.file.Path;
-
 public class BedrockPreviewAssetSource extends BedrockInstalledAssetSource {
     @Override
-    public Path getInstallLocation() {
-        return Path.of("C:\\XboxGames\\Minecraft Preview for Windows\\");
+    public String appId() {
+        return "Microsoft.MinecraftWindowsBeta";
     }
 
     @Override

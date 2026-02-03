@@ -3,10 +3,7 @@ package org.geysermc.assetwrangler.utils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.*;
 import java.awt.image.BufferedImage;
 
 public class ClipboardUtils {
@@ -14,6 +11,12 @@ public class ClipboardUtils {
         TransferableImage trans = new TransferableImage(img);
         Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
         c.setContents(trans, null);
+    }
+
+    public static void copyToClipboard(String str) {
+        StringSelection stringSelection = new StringSelection(str);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
     }
 
     private record TransferableImage(Image i) implements Transferable {

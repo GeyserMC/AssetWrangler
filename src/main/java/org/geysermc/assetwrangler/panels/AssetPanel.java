@@ -99,19 +99,29 @@ public abstract class AssetPanel extends BasePanel {
 
     public void redraw() {
         List<String> expandedPaths = new ArrayList<>();
+        List<String> selectedPaths = new ArrayList<>();
         for (int i = 0; i < tree.getRowCount(); i++){
             if (tree.isExpanded(i)) {
                 expandedPaths.add(((AssetTreeModel.Entry) tree.getPathForRow(i).getLastPathComponent()).getRelativePath());
+            }
+            if (tree.isRowSelected(i)) {
+                selectedPaths.add(((AssetTreeModel.Entry) tree.getPathForRow(i).getLastPathComponent()).getRelativePath());
             }
         }
 
         tree.setModel(new AssetTreeModel(this, this.rootAsset.resolve(getMetaSection().getRelativePath()), getRootDisplayName()));
 
+        int[] selectedRows = new int[selectedPaths.size()];
+        int x = 0;
         for (int i = 0; i < tree.getRowCount(); i++){
             if (expandedPaths.contains(((AssetTreeModel.Entry) tree.getPathForRow(i).getLastPathComponent()).getRelativePath())) {
                 tree.expandRow(i);
             }
+            if (selectedPaths.contains(((AssetTreeModel.Entry) tree.getPathForRow(i).getLastPathComponent()).getRelativePath())) {
+                selectedRows[x++] = i;
+            }
         }
+        tree.setSelectionRows(selectedRows);
     }
 
     public List<String> getSelectedPaths() {

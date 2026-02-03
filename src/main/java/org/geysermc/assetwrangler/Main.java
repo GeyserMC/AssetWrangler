@@ -3,6 +3,7 @@ package org.geysermc.assetwrangler;
 import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
 import com.formdev.flatlaf.intellijthemes.FlatArcIJTheme;
 import com.jthemedetecor.OsThemeDetector;
+import lombok.Getter;
 import org.geysermc.assetwrangler.config.Config;
 import org.geysermc.assetwrangler.sources.AssetSources;
 import org.geysermc.assetwrangler.sources.bedrock.*;
@@ -20,8 +21,6 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.desktop.AboutEvent;
-import java.awt.desktop.AboutHandler;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -30,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 public class Main {
     private static final YamlConfigurationLoader CONFIG_LOADER;
@@ -38,15 +38,35 @@ public class Main {
     public static final BufferedImage ICON_IMAGE;
     public static final Icon ICON;
     public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
-    public static Path mappingFile;
+    private static final List<Consumer<Boolean>> DARK_MODE_HOOKS = new CopyOnWriteArrayList<>();
 
-    private static final List<Runnable> DARK_MODE_HOOKS = new CopyOnWriteArrayList<>();
+    public static Path mappingFile;
+    @Getter
+    private static boolean darkMode;
+
+    public static void registerDarkModeHook(Consumer<Boolean> consumer) {
+        DARK_MODE_HOOKS.add(consumer);
+    }
+
+    public static void unregisterDarkModeHook(Consumer<Boolean> consumer) {
+        DARK_MODE_HOOKS.remove(consumer);
+    }
+
+    public static void registerDarkModeHook(Window frame, Consumer<Boolean> consumer) {
+        DARK_MODE_HOOKS.add(consumer);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                DARK_MODE_HOOKS.remove(consumer);
+            }
+        });
+    }
 
     public static void registerForFrame(Window frame) {
         Runnable runnable = () -> {
             SwingUtilities.updateComponentTreeUI(frame);
         };
-        DARK_MODE_HOOKS.add(runnable);
+        DARK_MODE_HOOKS.add((bool) -> runnable.run());
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -142,7 +162,9 @@ public class Main {
             FlatArcIJTheme.setup();
         }
 
-        DARK_MODE_HOOKS.forEach(Runnable::run);
+        darkMode = isDark;
+
+        DARK_MODE_HOOKS.forEach(c -> c.accept(isDark));
     }
 
     static {

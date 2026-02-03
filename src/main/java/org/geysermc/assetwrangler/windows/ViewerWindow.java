@@ -27,6 +27,8 @@ public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
 
         this.setLayout(new Layout());
 
+        this.add(new AssetMapperToolBar(this));
+
         AtomicBoolean waitingTime = new AtomicBoolean(true);
 
         if (isJava) {
@@ -118,12 +120,18 @@ public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
     }
 
     @Override
+    public boolean isForMapping() {
+        return false;
+    }
+
+    @Override
     public void refreshView() {
-        // No-op, refreshes would do nothing on a viewer window
+        this.assetPanel.redraw();
     }
 
     private static class Layout implements LayoutManager {
         private static final int MINIMUM_PREVIEW_PANEL_HEIGHT = 256;
+        private static final int TOOL_BAR_HEIGHT = 30;
 
         public void addLayoutComponent(String name, Component comp) {}
         public void removeLayoutComponent(Component comp) {}
@@ -133,13 +141,15 @@ public class ViewerWindow extends BaseWindow implements AssetViewerWindow {
         @Override
         public void layoutContainer(Container parent) {
             synchronized (parent.getTreeLock()) {
-                int panelsHeight = parent.getHeight() - MINIMUM_PREVIEW_PANEL_HEIGHT;
+                int panelsHeight = parent.getHeight() - MINIMUM_PREVIEW_PANEL_HEIGHT - TOOL_BAR_HEIGHT;
 
                 for (Component component : parent.getComponents()) {
-                    if (component instanceof AssetPanel panel) {
-                        panel.setBounds(0, 0, parent.getWidth(), panelsHeight);
+                    if (component instanceof AssetMapperToolBar toolBar) {
+                        toolBar.setBounds(0, 0, parent.getWidth(), TOOL_BAR_HEIGHT);
+                    } else if (component instanceof AssetPanel panel) {
+                        panel.setBounds(0, TOOL_BAR_HEIGHT, parent.getWidth(), panelsHeight);
                     } else if (component instanceof PreviewPanel panel) {
-                        panel.setBounds(0, panelsHeight, parent.getWidth(), MINIMUM_PREVIEW_PANEL_HEIGHT);
+                        panel.setBounds(0, panelsHeight + TOOL_BAR_HEIGHT, parent.getWidth(), MINIMUM_PREVIEW_PANEL_HEIGHT);
                     }
                 }
             }

@@ -288,6 +288,11 @@ public class MappingsWindow extends BaseWindow implements AssetViewerWindow {
         this.setTitle(BuildConstants.getInstance().getName());
     }
 
+    @Override
+    public boolean isForMapping() {
+        return true;
+    }
+
     public void markSave() {
         this.savesRequired = true;
         this.setTitle(BuildConstants.getInstance().getName() + " *");

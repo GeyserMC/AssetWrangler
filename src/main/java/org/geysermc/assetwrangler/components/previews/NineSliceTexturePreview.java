@@ -94,25 +94,27 @@ public class NineSliceTexturePreview extends JPanel {
 
         JLabel widthLabel = new JLabel("Preview Width: %d".formatted(width));
         controlPanel.add(widthLabel);
-        JSlider widthControl = new JSlider(width, width + 100, width);
+        JSlider widthControl = new JSlider(data.x1() + (img.getWidth() - data.x2()), width + 100, width);
         widthControl.addChangeListener(e -> {
             width = widthControl.getValue();
             widthLabel.setText("Width: %d".formatted(width));
-            /*if (!widthControl.getModel().getValueIsAdjusting())*/ redraw();
+            redraw();
         });
         controlPanel.add(widthControl);
 
         JLabel heightLabel = new JLabel("Preview Height: %d".formatted(height));
         controlPanel.add(heightLabel);
-        JSlider heightControl = new JSlider(height, height + 100, height);
+        JSlider heightControl = new JSlider(data.y1() + (img.getHeight() - data.y2()), height + 100, height);
         heightControl.addChangeListener(e -> {
             height = heightControl.getValue();
             heightLabel.setText("Height: %d".formatted(height));
-            /*if (!heightControl.getModel().getValueIsAdjusting())*/ redraw();
+            redraw();
         });
         controlPanel.add(heightControl);
 
         this.add(controlPanel);
+
+        redraw();
     }
 
     private void redraw() {
@@ -141,6 +143,7 @@ public class NineSliceTexturePreview extends JPanel {
     }
 
     private BufferedImage repeatWidthImgUntilFilled(BufferedImage img, int size) {
+        if (size == 0 || img == null) return null;
         BufferedImage canvas = new BufferedImage(size, img.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics g = canvas.getGraphics();
 
@@ -159,6 +162,7 @@ public class NineSliceTexturePreview extends JPanel {
     }
 
     private BufferedImage repeatHeightImgUntilFilled(BufferedImage img, int size) {
+        if (size == 0 || img == null) return null;
         BufferedImage canvas = new BufferedImage(img.getWidth(), size, BufferedImage.TYPE_INT_ARGB);
         Graphics g = canvas.getGraphics();
 
@@ -186,25 +190,37 @@ public class NineSliceTexturePreview extends JPanel {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     if (!e.isPopupTrigger()) return;
-                    Icon thisIcon = NineSliceRenderer.this.getIcon();
+                    Icon icon = NineSliceRenderer.this.getIcon();
+                    BufferedImage img = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+                    icon.paintIcon(null, img.getGraphics(), 0, 0);
 
-                    if (thisIcon instanceof BufferedImageIcon icon) {
-                        JPopupMenu menu = new JPopupMenu();
+                    JPopupMenu menu = new JPopupMenu();
 
-                        JMenuItem item = new JMenuItem("Copy image");
+                    JMenuItem pathItem = new JMenuItem("Copy relative path");
+                    pathItem.addActionListener(ev -> {
+                        ClipboardUtils.copyToClipboard(relativePath);
+                    });
+                    menu.add(pathItem);
 
-                        item.addActionListener(ev -> {
-                            BufferedImage img = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+                    JMenuItem regularItem = new JMenuItem("Copy x1 scaled image");
+                    regularItem.addActionListener(ev -> {
+                        ClipboardUtils.copyToClipboard(img);
+                    });
+                    menu.add(regularItem);
 
-                            icon.paintIcon(null, img.getGraphics(), 0, 0);
+                    JMenuItem scaled5Item = new JMenuItem("Copy x5 scaled image");
+                    scaled5Item.addActionListener(ev -> {
+                        ClipboardUtils.copyToClipboard(ImageUtil.scale(img, 5));
+                    });
+                    menu.add(scaled5Item);
 
-                            ClipboardUtils.copyToClipboard(img);
-                        });
+                    JMenuItem scaled10Item = new JMenuItem("Copy x10 scaled image");
+                    scaled10Item.addActionListener(ev -> {
+                        ClipboardUtils.copyToClipboard(ImageUtil.scale(img, 10));
+                    });
+                    menu.add(scaled10Item);
 
-                        menu.add(item);
-
-                        menu.show(e.getComponent(), e.getX(), e.getY());
-                    }
+                    menu.show(e.getComponent(), e.getX(), e.getY());
                 }
             });
         }

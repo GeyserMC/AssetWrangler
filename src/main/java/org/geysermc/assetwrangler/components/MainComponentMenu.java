@@ -41,14 +41,17 @@ public class MainComponentMenu extends JPopupMenu {
                                 panel.getMain().getFrame(), "Path please.",
                                 "Input custom mapping path:"
                         );
-                        String value = inputValue.join();
-                        if (value == null) return;
+                        inputValue.thenAcceptAsync(value -> {
+                            SwingUtilities.invokeLater(() -> {
+                                if (value == null) return;
 
-                        panel.getMain().getActionManager().doAction(() -> {
-                            panel.getMain().getJsonMappings().map(path, Collections.singletonList(value));
-                        }, () -> {
-                            panel.unmap(path);
-                        }, true);
+                                panel.getMain().getActionManager().doAction(() -> {
+                                    panel.getMain().getJsonMappings().map(path, Collections.singletonList(value));
+                                }, () -> {
+                                    panel.unmap(path);
+                                }, true);
+                            });
+                        });
                     }, "Specify Custom Mapping"
             );
         }

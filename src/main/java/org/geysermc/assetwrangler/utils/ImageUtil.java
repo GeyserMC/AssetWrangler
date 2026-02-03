@@ -29,11 +29,7 @@ package org.geysermc.assetwrangler.utils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -42,12 +38,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.WritableByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 public class ImageUtil {
 
@@ -515,6 +506,50 @@ public class ImageUtil {
         g.drawImage(image, 0, 0, null);
         g.dispose();
         return newImage;
+    }
+
+    public static BufferedImage squareImage(BufferedImage image) {
+        if (image.getHeight() == image.getWidth()) return image;
+        else if (image.getWidth() > image.getHeight()) {
+            BufferedImage resultImg = new BufferedImage(image.getWidth(), image.getWidth(), BufferedImage.TYPE_INT_ARGB);
+            int offset = (image.getWidth() - image.getHeight()) / 2;
+            resultImg.getGraphics().drawImage(image, 0, offset, null);
+            return resultImg;
+        } else {
+            BufferedImage resultImg = new BufferedImage(image.getHeight(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            int offset = (image.getHeight() - image.getWidth()) / 2;
+            resultImg.getGraphics().drawImage(image, offset, 0, null);
+            return resultImg;
+        }
+    }
+
+    public static BufferedImage checkerBackgroundImage(BufferedImage image) {
+        BufferedImage bg = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        boolean isDark = false;
+
+        for (int x = 0; x < bg.getWidth(); x++) {
+            boolean isYDark = isDark;
+            for (int y = 0; y < bg.getHeight(); y++) {
+                Color color = new Color(
+                        isYDark ? 108 : 205,
+                        isYDark ? 108 : 205,
+                        isYDark ? 108 : 205
+                );
+
+                bg.setRGB(x, y, colorToARGB(color));
+                isYDark = !isYDark;
+            }
+
+            isDark = !isDark;
+        }
+
+        Graphics2D graphics = (Graphics2D) bg.getGraphics();
+
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1f));
+        graphics.drawImage(image, 0, 0, null);
+
+        return bg;
     }
 
     /**

@@ -18,6 +18,7 @@ public class Config {
 
     private boolean showTextureMetadata = false;
     private boolean disableAnimationInterpolation = false;
+    private boolean addCheckeredBackground = false;
 
     private String javaAssetSourceKey = "";
     private String bedrockAssetSourceKey = "";

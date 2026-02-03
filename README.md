@@ -10,10 +10,11 @@ AssetWrangler is a GUI application to help assist the development of [PackConver
 ![Mappings screen in use](static/mappingScreenUsage.png)
 
 ## Features
-- Mapping editor and creater
+- Pack Converter mapping editor and creator
 - Asset viewer (Both java and bedrock)
 - Custom sources for the java/bedrock assets
 
 ## Compiling
-1. Clone the repo to your computer (`git clone https://github.com/GeyserMC/AssetWrangler`)
-2. Run `gradlew build` and locate to bootstrap/build folder and run the `AssetWrangler.jar` file.
+1. Ensure Java 21 is installed
+2. Clone the repo to your computer (`git clone https://github.com/GeyserMC/AssetWrangler`)
+3. Run `gradlew build` and locate to bootstrap/build folder and run the `AssetWrangler.jar` file.

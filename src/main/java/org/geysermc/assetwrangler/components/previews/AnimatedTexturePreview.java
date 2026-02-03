@@ -6,6 +6,7 @@ import org.geysermc.assetwrangler.components.ClosableComponent;
 import org.geysermc.assetwrangler.utils.AnimationMeta;
 import org.geysermc.assetwrangler.utils.BetterTimer;
 import org.geysermc.assetwrangler.utils.ClipboardUtils;
+import org.geysermc.assetwrangler.utils.ImageUtil;
 
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
@@ -62,16 +63,29 @@ public class AnimatedTexturePreview extends JLabel implements ClosableComponent 
 
                 JPopupMenu menu = new JPopupMenu();
 
-                JMenuItem regularItem = new JMenuItem("Copy image");
+                JMenuItem pathItem = new JMenuItem("Copy relative path");
+                pathItem.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(relativePath);
+                });
+                menu.add(pathItem);
+
+                JMenuItem regularItem = new JMenuItem("Copy x1 scaled image");
                 regularItem.addActionListener(ev -> {
                     ClipboardUtils.copyToClipboard(renderedImage);
                 });
                 menu.add(regularItem);
-                JMenuItem scaledItem = new JMenuItem("Copy scaled image");
-                scaledItem.addActionListener(ev -> {
-                    ClipboardUtils.copyToClipboard(scaledRenderedImage);
+
+                JMenuItem scaled5Item = new JMenuItem("Copy x5 scaled image");
+                scaled5Item.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(ImageUtil.scale(renderedImage, 5));
                 });
-                menu.add(scaledItem);
+                menu.add(scaled5Item);
+
+                JMenuItem scaled10Item = new JMenuItem("Copy x10 scaled image");
+                scaled10Item.addActionListener(ev -> {
+                    ClipboardUtils.copyToClipboard(ImageUtil.scale(renderedImage, 10));
+                });
+                menu.add(scaled10Item);
 
                 menu.addPopupMenuListener(new PopupMenuListener() {
                     @Override

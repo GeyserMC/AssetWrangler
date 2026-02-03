@@ -102,8 +102,6 @@ public class Asset {
     }
 
     public boolean viewable(AssetPanel panel) {
-        if (!panel.isForMapping()) return true;
-
         if (directory) {
             boolean visible = false;
             for (Asset child : children) {
@@ -120,6 +118,8 @@ public class Asset {
                             name.endsWith(".mcmeta")
             ) return false;
         }
+
+        if (!panel.isForMapping()) return true;
 
         String relativePath = this.relativePath;
         int dotIndex = relativePath.indexOf('.');

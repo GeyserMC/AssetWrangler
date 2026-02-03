@@ -38,10 +38,6 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
     private Path getStoredVersionPath(Path dataDirectory) throws IOException {
         Path dataPath = dataDirectory.resolve("data/%s.version".formatted(getKey()));
 
-        if (Files.notExists(dataPath)) {
-            Files.writeString(dataPath, getLatestVersionTag());
-        }
-
         return dataPath;
     }
 
@@ -62,9 +58,12 @@ public abstract class JavaVanillaAssetSource implements AssetSource {
                 if (shouldDownload) {
                     Files.writeString(storedVersion, getLatestVersionTag());
                 }
+            } else if (Files.notExists(dataDirectory.resolve(RESOLVED_DATA_PATH.formatted(currentVersion)))) {
+                shouldDownload = true;
             }
         } else {
             shouldDownload = true;
+            Files.createDirectories(storedVersion.getParent());
             Files.writeString(storedVersion, getLatestVersionTag());
         }
 
