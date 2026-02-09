@@ -164,14 +164,16 @@ public class AssetTreeModel implements TreeModel {
             dotIndex = unmappedRelativePath.indexOf('.');
             if (dotIndex != -1) unmappedRelativePath = unmappedRelativePath.substring(0, dotIndex);
 
-            if (panel.isMapped(relativePath)) {
-                c = Color.GREEN;
-            } else if (panel.getMetaSection().getMatchingPaths().contains(unmappedRelativePath)) {
-                c = Color.MAGENTA;
-            } else if (panel.getMetaSection().getIgnoredPaths().contains(unmappedRelativePath)) {
-                c = Color.RED;
-            } else if (panel.getMetaSection().getTransformedPaths().contains(unmappedRelativePath)) {
-                c = Color.CYAN;
+            if (!this.directory) {
+                if (panel.isMapped(relativePath)) {
+                    c = Color.GREEN;
+                } else if (panel.getMetaSection().getMatchingPaths().contains(unmappedRelativePath)) {
+                    c = Color.MAGENTA;
+                } else if (panel.getMetaSection().getIgnoredPaths().contains(unmappedRelativePath)) {
+                    c = Color.RED;
+                } else if (panel.getMetaSection().getTransformedPaths().contains(unmappedRelativePath)) {
+                    c = Color.CYAN;
+                }
             }
 
             JLabel label = new JLabel(this.name);
